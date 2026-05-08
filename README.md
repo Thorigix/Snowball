@@ -1,50 +1,55 @@
-# Welcome to your Expo app 👋
+# Snowball
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Snowball is a mobile-first Solana group-buying escrow app.
 
-## Get started
+Users can join collective purchases, fund from another chain through LI.FI, deposit into a Solana escrow program, and release seller payment only after delivery confirmation.
 
-1. Install dependencies
+## Hackathon MVP
 
-   ```bash
-   npm install
-   ```
+This 24-hour MVP focuses on one demo campaign:
 
-2. Start the app
+- Product: RTX 5080 Group Buy
+- Target buyers: 3
+- Deposit per buyer: 0.05 devnet SOL
+- Seller: NovaTech Istanbul
+- Release rule: 2 of 3 delivery confirmations
 
-   ```bash
-   npx expo start
-   ```
+## Why Snowball?
 
-In the output, you'll find options to open the app in a
+Snowball helps small groups coordinate purchases together. A group starts small, grows as more buyers join, and only releases payment when delivery conditions are satisfied.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Person A Scope
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Solana Anchor escrow program
+- Devnet deployment
+- Minimal backend
+- ElevenLabs TTS endpoint
+- LI.FI quote/proxy endpoint
+- Technical README
 
-## Get a fresh project
+## Person B Scope
 
-When you're ready, run:
+- Mobile app
+- Campaign screens
+- Wallet flow
+- LI.FI funding screen
+- AI assistant screen
+- Demo video
 
-```bash
-npm run reset-project
-```
+## Planned Technical Stack
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Solana Devnet
+- Anchor
+- Rust
+- TypeScript
+- Express backend
+- ElevenLabs Text-to-Speech
+- LI.FI quote/proxy flow
 
-## Learn more
+## MVP Escrow Decision
 
-To learn more about developing your project with Expo, look at the following resources:
+For hackathon speed, the first demo escrow uses devnet SOL. The production direction is to extend the same escrow model to SPL USDC vaults.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Current Status
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+A0 repository scaffold is being prepared.
