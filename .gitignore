@@ -31,7 +31,37 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
+!.env.example
 .env*.local
+
+# secrets / credentials
+*.cert
+*.crt
+*.pfx
+*.keystore
+google-services.json
+GoogleService-Info.plist
+serviceAccountKey*.json
+firebase-adminsdk*.json
+secrets.json
+credentials.json
+
+# logs
+*.log
+logs/
+
+# editor / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# misc
+coverage/
+.cache/
+.tmp/
 
 # typescript
 *.tsbuildinfo
