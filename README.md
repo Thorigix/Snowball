@@ -268,3 +268,76 @@ Notes:
 - All 11 Anchor tests pass against localnet prior to deploy.
 - No new Anchor instructions, escrow logic changes, refund flow, or demo seed flow were added in A5.
 - No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. AI features remain external-API only.
+
+## A6 Devnet Demo Flow Status
+
+A6 creates a real devnet demo flow for the Snowball escrow lifecycle against the deployed program.
+
+Flow:
+
+```text
+create_campaign → join_campaign x3 → mark_shipped → confirm_delivery x2 → release_funds
+```
+
+Program ID:
+
+```text
+2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss
+```
+
+Explorer:
+
+```text
+https://explorer.solana.com/address/2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss?cluster=devnet
+```
+
+Demo campaign:
+
+- Target buyers: 3
+- Deposit per buyer: 0.05 devnet SOL
+- Release rule: 2 of 3 delivery confirmations release funds to seller
+
+Script location:
+
+```text
+anchor/scripts/devnet-demo-flow.ts
+```
+
+Run from `anchor/`:
+
+```bash
+npm run demo:devnet
+```
+
+Or directly:
+
+```bash
+ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+ANCHOR_WALLET=~/.config/solana/id.json \
+npx ts-mocha -p ./tsconfig.json -t 1000000 scripts/devnet-demo-flow.ts
+```
+
+Behavior:
+
+- Generates fresh ephemeral keypairs for creator, seller, buyer1, buyer2, buyer3.
+- Funds them from the provider wallet via `SystemProgram.transfer` (no airdrop).
+- Derives `Campaign` and `Contribution` PDAs using the program's seeds: `[b"campaign", creator]` and `[b"contribution", campaign, buyer]`.
+- Calls `create_campaign`, three `join_campaign`, `mark_shipped`, two `confirm_delivery`, then `release_funds` against the deployed devnet program.
+- Asserts state transitions: `Open → Funded → Shipped → Released`, `current_buyers = 3`, `total_deposited = 150_000_000`, `confirmations = 2`.
+- Records seller balance before and after release and prints a clean summary with every public key, PDA, transaction signature, and Solana Explorer link.
+
+Provider wallet must hold at least 0.7 devnet SOL to seed the ephemeral wallets. If the provider balance is below this threshold the script stops with a clear error.
+
+Private keys are never printed and never written to disk. Ephemeral keypairs are discarded after the run.
+
+Mobile handoff file:
+
+```text
+handoff/a6-devnet-demo-flow.md
+```
+
+Notes:
+
+- No new Anchor instructions, escrow logic changes, or backend changes were made in this A6 step.
+- No new dependencies were added; the script reuses the existing `ts-mocha`, `chai`, and `@anchor-lang/core` workspace deps.
+- No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. The flow exercises only the on-chain Snowball program.
