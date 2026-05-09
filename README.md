@@ -113,3 +113,26 @@ Current on-chain lifecycle:
 create_campaign → join_campaign x3 → mark_shipped → confirm_delivery x2 → release_funds
 ```
 
+## A4 Backend Status
+
+A4 adds a minimal Express backend for the Snowball demo.
+
+Implemented endpoints:
+
+- `GET /api/health`
+- `GET /api/campaign`
+- `POST /api/lifi/quote`
+- `POST /api/elevenlabs/summary-audio`
+
+A4 intentionally uses mock/fallback responses for LI.FI and ElevenLabs.
+
+Real integrations will be added later.
+
+Backend commands:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
