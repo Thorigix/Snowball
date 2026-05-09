@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Dark, Brand, Radius } from "@/constants/theme";
+import { StyleSheet } from "react-native";
+import { Dark, Brand } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
@@ -48,6 +48,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "sparkles" : "sparkles-outline"}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="proof"
+        options={{
+          title: "Proof",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "ribbon" : "ribbon-outline"}
               size={22}
               color={color}
             />

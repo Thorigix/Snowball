@@ -8,14 +8,37 @@ Deposit per buyer: 0.05 devnet SOL
 Seller: NovaTech Istanbul  
 Release rule: 2 of 3 delivery confirmations release funds to seller
 
-## Demo Flow
+## Demo Platform
 
-1. User opens the mobile app and sees the RTX 5080 group-buy campaign.
-2. User sees the LI.FI cross-chain funding option.
-3. User deposits into the Solana escrow.
-4. ElevenLabs assistant explains the campaign and escrow protection.
-5. Buyer confirms delivery.
-6. Funds are released to the seller.
+The live demo runs in a **desktop browser** (Chrome / Edge / Brave) via `npm run web`.
+
+Reasons:
+- Phantom / Solflare browser extensions sign the on-chain `join_campaign` instruction.
+- ElevenLabs Conversational AI (Sarah) uses WebRTC and only works in a browser.
+- Mobile Wallet Adapter and `@elevenlabs/react-native` would require an EAS dev build, which is out of scope for this hackathon MVP.
+
+Expo Go on a physical device still loads the UI, but voice and `Sign Deposit` will be disabled — use it for screen-only walkthroughs only.
+
+## Pre-Demo Checklist
+
+Before opening the app:
+
+1. Backend is up: `cd backend && npm run dev` (port 3001).
+2. Backend provider wallet has at least 0.5 devnet SOL: `solana balance --url devnet`. Each demo run consumes roughly 0.16 SOL (campaign init + 2 buyer seeds + fund-wallet). If low, top up via [faucet.solana.com](https://faucet.solana.com) or [faucet.quicknode.com/solana/devnet](https://faucet.quicknode.com/solana/devnet) — `solana airdrop` is heavily rate-limited.
+3. Browser has Phantom or Solflare installed and switched to **Solana Devnet**.
+4. Open Chrome to `http://localhost:8081` (Expo web URL).
+
+## Demo Flow (Live)
+
+1. **Restart Demo** — top-right pill on the home screen. Confirms the on-chain campaign is back to OPEN with 2 / 3 buyers seeded. Wait for the spinner (~5 s).
+2. **Wallet tab → Connect Wallet** — Phantom popup, approve. Address + 0.00 SOL balance appears.
+3. **Get Devnet SOL** — first action in the action row. Backend airdrops 0.06 devnet SOL to the connected wallet, balance refreshes automatically.
+4. **Home → RTX 5080 card** — open the campaign detail. Show progress bar at 2/3, escrow PDA, status `OPEN`.
+5. (Optional) **Fund from Another Chain** — show LI.FI quote screen, get a route from Base USDC → Solana SOL, then "Continue to Deposit".
+6. **Sign Deposit** — Phantom popup, approve. Real devnet TX signature appears on Success screen, "View on Solana Explorer" link is clickable.
+7. **AI tab** — tap the mic, talk to Sarah ("How does the escrow protect me?"). Voice in/out, campaign context already loaded.
+8. **Demo Controls FAB → Mark Shipped → Confirm Delivery → Confirm Delivery → Release Funds** — each step is a real devnet TX from the backend provider keypair. Status badges update live: `FUNDED → SHIPPED → DELIVERY_REVIEW → RELEASED`.
+9. **Reset for next run** — Restart Demo on the home screen.
 
 ## Notes
 

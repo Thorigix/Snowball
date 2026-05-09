@@ -1,5 +1,5 @@
 import { BACKEND_URL } from "@/constants/config";
-import type { Campaign, CampaignStatus, LifiRouteSummary } from "@/types";
+import type { Campaign, CampaignStatus, CampaignTx, LifiRouteSummary } from "@/types";
 
 type BackendCampaign = {
   id: string;
@@ -22,6 +22,7 @@ type BackendCampaign = {
   creator?: string;
   seller?: string;
   buyers?: string[];
+  txHistory?: CampaignTx[];
 };
 
 type LifiQuoteRequest = {
@@ -104,6 +105,8 @@ export function mapBackendCampaign(campaign: BackendCampaign): Campaign {
     creator: campaign.creator,
     seller: campaign.seller,
     buyers: campaign.buyers,
+    programId: campaign.programId,
+    txHistory: campaign.txHistory ?? [],
   };
 }
 

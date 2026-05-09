@@ -37,7 +37,13 @@ export default function JoinCampaignScreen() {
     if (!wallet.connected) {
       const message = "Connect Phantom or Solflare from the Wallet tab before depositing.";
       setErrorText(message);
-      Alert.alert("Wallet required", message);
+      Alert.alert("Wallet required", message, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Open Wallet",
+          onPress: () => router.push("/(tabs)/wallet"),
+        },
+      ]);
       return;
     }
 
@@ -158,7 +164,17 @@ export default function JoinCampaignScreen() {
             <ActivityIndicator color={Dark.textInverse} />
           ) : (
             <>
-              <Ionicons name="lock-closed" size={20} color={Dark.textInverse} />
+              <Ionicons
+                name={
+                  campaign.userJoined
+                    ? "checkmark-circle"
+                    : wallet.connected
+                      ? "lock-closed"
+                      : "wallet-outline"
+                }
+                size={20}
+                color={Dark.textInverse}
+              />
               <Text style={s.depositBtnText}>
                 {campaign.userJoined
                   ? "Already Joined"

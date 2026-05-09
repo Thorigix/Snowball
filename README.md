@@ -214,7 +214,7 @@ curl -X POST http://localhost:3001/api/lifi/quote \
 ```
 
 
-## A5 Devnet Deployment Status
+## A7 Devnet Deployment Status
 
 The Snowball Anchor program has been deployed to Solana Devnet.
 
@@ -266,12 +266,12 @@ Notes:
 - `Anchor.toml` declares the program under both `[programs.localnet]` and `[programs.devnet]` so local tests stay usable while the devnet deployment is addressable.
 - `declare_id!` in `programs/snowball_escrow/src/lib.rs` matches `anchor keys list`; no `anchor keys sync` was required.
 - All 11 Anchor tests pass against localnet prior to deploy.
-- No new Anchor instructions, escrow logic changes, refund flow, or demo seed flow were added in A5.
+- No new Anchor instructions, escrow logic changes, refund flow, or demo seed flow were added in A7.
 - No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. AI features remain external-API only.
 
-## A6 Devnet Demo Flow Status
+## A8 Devnet Demo Flow Status
 
-A6 creates a real devnet demo flow for the Snowball escrow lifecycle against the deployed program.
+A8 creates a real devnet demo flow for the Snowball escrow lifecycle against the deployed program.
 
 Flow:
 
@@ -338,7 +338,7 @@ handoff/a6-devnet-demo-flow.md
 
 Notes:
 
-- No new Anchor instructions, escrow logic changes, or backend changes were made in this A6 step.
+- No new Anchor instructions, escrow logic changes, or backend changes were made in this A8 step.
 - No new dependencies were added; the script reuses the existing `ts-mocha`, `chai`, and `@anchor-lang/core` workspace deps.
 - No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. The flow exercises only the on-chain Snowball program.
 

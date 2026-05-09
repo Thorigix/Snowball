@@ -57,6 +57,23 @@ export type Campaign = {
   creator?: string;
   seller?: string;
   buyers?: string[];
+  programId?: string;
+  txHistory?: CampaignTx[];
+};
+
+export type CampaignTx = {
+  id: string;
+  type:
+    | "fund_creator"
+    | "fund_seller"
+    | "fund_buyer"
+    | "create_campaign"
+    | "join"
+    | "mark_shipped"
+    | "confirm_delivery"
+    | "release_funds";
+  createdAt: string;
+  note: string;
 };
 
 export type Contribution = {

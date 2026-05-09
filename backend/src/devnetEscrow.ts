@@ -340,9 +340,13 @@ export async function joinDevnetCampaign() {
   const buyerIndex = rt.initializedBuyers;
   if (buyerIndex >= TARGET_BUYERS) throw new Error("Campaign is full");
 
-  const sig = await send(rt, new Transaction().add(joinIx(rt, buyerIndex)), [
-    rt.buyers[buyerIndex],
-  ]);
+  const buyer = rt.buyers[buyerIndex];
+  const buyerBalance = await rt.connection.getBalance(buyer.publicKey, "confirmed");
+  if (buyerBalance < FUND_BUYER) {
+    await fund(rt, buyer.publicKey, FUND_BUYER, "fund_buyer");
+  }
+
+  const sig = await send(rt, new Transaction().add(joinIx(rt, buyerIndex)), [buyer]);
   rt.initializedBuyers += 1;
   addTx(rt, "join", sig, `Buyer ${buyerIndex + 1} deposited 0.05 devnet SOL`);
   return sig;

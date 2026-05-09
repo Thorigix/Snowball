@@ -446,29 +446,27 @@ export async function mockReleaseFunds(
   }
 }
 
-export function resetDemoState(): void {
-  mutateBackendCampaign("reset")
-    .then((result) => {
-      INITIAL_CAMPAIGNS.forEach((seed, i) => {
-        if (allCampaigns[i]) Object.assign(allCampaigns[i], { ...seed, userJoined: false });
-        else allCampaigns[i] = { ...seed, userJoined: false };
-      });
-      allCampaigns.length = INITIAL_CAMPAIGNS.length;
-      demoContributions.length = 0;
-      INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
-      applyBackendCampaign({ ...result.campaign, userJoined: false });
-    })
-    .catch((error) => {
-      console.error("[Backend] Reset failed", error);
-      INITIAL_CAMPAIGNS.forEach((seed, i) => {
-        if (allCampaigns[i]) Object.assign(allCampaigns[i], { ...seed, userJoined: false });
-        else allCampaigns[i] = { ...seed, userJoined: false };
-      });
-      allCampaigns.length = INITIAL_CAMPAIGNS.length;
-      demoContributions.length = 0;
-      INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
-      notify();
-    });
+function applyLocalReset(): void {
+  INITIAL_CAMPAIGNS.forEach((seed, i) => {
+    if (allCampaigns[i]) Object.assign(allCampaigns[i], { ...seed, userJoined: false });
+    else allCampaigns[i] = { ...seed, userJoined: false };
+  });
+  allCampaigns.length = INITIAL_CAMPAIGNS.length;
+  demoContributions.length = 0;
+  INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
+}
+
+export async function resetDemoState(): Promise<void> {
+  try {
+    const result = await mutateBackendCampaign("reset");
+    applyLocalReset();
+    applyBackendCampaign({ ...result.campaign, userJoined: false });
+  } catch (error) {
+    console.error("[Backend] Reset failed", error);
+    applyLocalReset();
+    notify();
+    throw error;
+  }
 }
 
 export function getConfirmationThreshold(target: number): number {

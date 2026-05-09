@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,23 @@ export default function SuccessScreen() {
     campaignTitle: string;
   }>();
   const router = useRouter();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!txHash) return;
+    try {
+      if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(txHash);
+      } else {
+        const Clipboard = require("react-native").Clipboard;
+        Clipboard?.setString?.(txHash);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore
+    }
+  };
 
   const isDelivery = type === "delivery";
   const isDemoTx = typeof txHash === "string" && txHash.startsWith("demo-");
@@ -44,9 +61,21 @@ export default function SuccessScreen() {
         {/* Transaction Info */}
         {txHash && (
           <View style={s.txCard}>
-            <Text style={s.txLabel}>
-              {isDemoTx ? "DEMO BACKEND EVENT ID" : "TRANSACTION HASH"}
-            </Text>
+            <View style={s.txHeaderRow}>
+              <Text style={s.txLabel}>
+                {isDemoTx ? "DEMO BACKEND EVENT ID" : "TRANSACTION HASH"}
+              </Text>
+              <TouchableOpacity onPress={handleCopy} activeOpacity={0.7} style={s.copyBtn}>
+                <Ionicons
+                  name={copied ? "checkmark-outline" : "copy-outline"}
+                  size={14}
+                  color={copied ? Brand.success : Dark.textSecondary}
+                />
+                <Text style={[s.copyText, copied && { color: Brand.success }]}>
+                  {copied ? "Copied" : "Copy"}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <Text style={s.txHash} numberOfLines={1}>{txHash}</Text>
             {isDemoTx ? (
               <Text style={s.demoTxNote}>
@@ -87,7 +116,10 @@ const s = StyleSheet.create({
   campaignBadge: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Dark.bgCard, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.full, alignSelf: "center", borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
   campaignName: { fontSize: Typography.bodySmall, color: Dark.text, fontWeight: Typography.medium },
   txCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
-  txLabel: { fontSize: Typography.tiny, color: Dark.textMuted, letterSpacing: 0.8, marginBottom: Spacing.sm },
+  txHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm },
+  txLabel: { fontSize: Typography.tiny, color: Dark.textMuted, letterSpacing: 0.8 },
+  copyBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
+  copyText: { fontSize: Typography.tiny, color: Dark.textSecondary, fontWeight: Typography.semiBold, letterSpacing: 0.5 },
   txHash: { fontSize: Typography.caption, color: Dark.text, fontFamily: "monospace", marginBottom: Spacing.md },
   explorerBtn: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   explorerText: { fontSize: Typography.bodySmall, color: Brand.solana, fontWeight: Typography.medium },

@@ -25,6 +25,13 @@ export default function CampaignDetailScreen() {
   const diff = new Date(campaign.deadline).getTime() - Date.now();
   const timeLeft = diff <= 0 ? "Expired" : `${Math.floor(diff/86400000)}d ${Math.floor((diff%86400000)/3600000)}h left`;
   const sc = StatusColors[campaign.status] ?? StatusColors.OPEN;
+  const riskScore = campaign.status === "OPEN" ? 72 : campaign.status === "RELEASED" ? 94 : 84;
+  const riskTone = riskScore >= 85 ? Brand.success : Brand.warning;
+  const missingBuyers = Math.max(0, campaign.targetParticipants - campaign.currentParticipants);
+  const neededConfirmations = Math.max(
+    0,
+    Math.ceil(campaign.targetParticipants * 0.66) - campaign.confirmationsCount
+  );
 
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
@@ -97,6 +104,35 @@ export default function CampaignDetailScreen() {
           </Text>
         </View>
 
+        <View style={s.riskCard}>
+          <View style={s.riskHeader}>
+            <View>
+              <Text style={s.label}>AI RISK REPORT</Text>
+              <Text style={s.riskTitle}>Buyer safety score</Text>
+            </View>
+            <View style={[s.riskScore, { borderColor: riskTone }]}>
+              <Text style={[s.riskScoreText, { color: riskTone }]}>{riskScore}</Text>
+            </View>
+          </View>
+          <View style={s.riskRows}>
+            <RiskRow
+              icon="people-outline"
+              label="Group readiness"
+              value={missingBuyers === 0 ? "Target filled" : `${missingBuyers} buyer(s) still needed`}
+            />
+            <RiskRow
+              icon="storefront-outline"
+              label="Seller release risk"
+              value={neededConfirmations === 0 ? "Release threshold met" : `${neededConfirmations} confirmation(s) before release`}
+            />
+            <RiskRow
+              icon="lock-closed-outline"
+              label="Fund custody"
+              value={campaign.campaignPda ? "On-chain escrow PDA available" : "Escrow PDA pending backend sync"}
+            />
+          </View>
+        </View>
+
         {/* Actions */}
         <View style={s.actions}>
           {campaign.status === "OPEN" && (
@@ -147,6 +183,26 @@ export default function CampaignDetailScreen() {
   );
 }
 
+function RiskRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={s.riskRow}>
+      <Ionicons name={icon} size={15} color={Brand.primary} />
+      <View style={{ flex: 1 }}>
+        <Text style={s.riskRowLabel}>{label}</Text>
+        <Text style={s.riskRowValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Dark.bg },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
@@ -182,6 +238,15 @@ const s = StyleSheet.create({
   trustCard: { backgroundColor: "rgba(91, 181, 162,0.06)", borderRadius: Radius.lg, padding: Spacing.xl, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.15)", alignItems: "center", marginBottom: Spacing.xl },
   trustTitle: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Brand.primary, marginTop: Spacing.sm, marginBottom: Spacing.sm },
   trustDesc: { fontSize: Typography.caption, color: Dark.textSecondary, textAlign: "center", lineHeight: 18 },
+  riskCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
+  riskHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.md },
+  riskTitle: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.text },
+  riskScore: { width: 52, height: 52, borderRadius: Radius.full, borderWidth: 2, alignItems: "center", justifyContent: "center", backgroundColor: Dark.surface },
+  riskScoreText: { fontSize: Typography.h3, fontWeight: Typography.bold },
+  riskRows: { gap: Spacing.sm },
+  riskRow: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.sm, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: Dark.border },
+  riskRowLabel: { fontSize: Typography.caption, color: Dark.textMuted, marginBottom: 2 },
+  riskRowValue: { fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 17 },
   actions: { gap: Spacing.md },
   primaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md },
   primaryBtnDisabled: { backgroundColor: Dark.bgCard, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.25)" },

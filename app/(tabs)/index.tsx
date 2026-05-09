@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius, StatusColors } from "@/constants/theme";
 import { Campaign } from "@/types";
 import { useCampaigns } from "@/hooks/use-mock-store";
+import { resetDemoState } from "@/services/mock-data";
 import DemoControls from "@/components/DemoControls";
 
 const { width } = Dimensions.get("window");
@@ -22,6 +25,24 @@ export default function CampaignFeedScreen() {
   const router = useRouter();
   const campaigns = useCampaigns();
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [resetting, setResetting] = useState(false);
+
+  const handleRestart = async () => {
+    if (resetting) return;
+    setResetting(true);
+    try {
+      await resetDemoState();
+    } catch (error) {
+      Alert.alert(
+        "Restart failed",
+        error instanceof Error
+          ? error.message
+          : "Devnet reset failed. Check the backend terminal."
+      );
+    } finally {
+      setResetting(false);
+    }
+  };
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -47,10 +68,12 @@ export default function CampaignFeedScreen() {
     0
   );
 
-  const CARD_ICONS: Record<number, string> = {
-    0: "hardware-chip-outline",
-    1: "headset-outline",
-    2: "keypad-outline",
+  const CARD_ICONS: Record<string, string> = {
+    "campaign-rtx-5080-demo": "hardware-chip-outline",
+    "campaign-airpods-demo": "headset-outline",
+    "campaign-keyboard-demo": "keypad-outline",
+    "campaign-powerbank-demo": "battery-charging-outline",
+    "campaign-sticker-pack-demo": "pricetag-outline",
   };
 
   return (
@@ -65,8 +88,20 @@ export default function CampaignFeedScreen() {
             <Text style={s.greeting}>Welcome back</Text>
             <Text style={s.appName}>Snowball</Text>
           </View>
-          <TouchableOpacity style={s.avatarBtn}>
-            <Ionicons name="person-outline" size={18} color={Dark.textSecondary} />
+          <TouchableOpacity
+            style={[s.restartBtn, resetting && s.restartBtnBusy]}
+            onPress={handleRestart}
+            disabled={resetting}
+            activeOpacity={0.75}
+          >
+            {resetting ? (
+              <ActivityIndicator size="small" color={Brand.primary} />
+            ) : (
+              <Ionicons name="refresh-outline" size={14} color={Brand.primary} />
+            )}
+            <Text style={s.restartText}>
+              {resetting ? "Resetting..." : "Restart Demo"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -94,19 +129,64 @@ export default function CampaignFeedScreen() {
 
         {/* Quick Actions */}
         <View style={s.actions}>
-          {[
-            { icon: "add-circle-outline", label: "Join", color: Brand.primary },
-            { icon: "swap-horizontal-outline", label: "Bridge", color: Brand.secondary },
-            { icon: "shield-checkmark-outline", label: "Escrow", color: Brand.primary },
-            { icon: "chatbubble-outline", label: "AI", color: Brand.secondary },
-          ].map((a, i) => (
-            <TouchableOpacity key={i} style={s.actionItem}>
-              <View style={[s.actionIcon, { backgroundColor: `${a.color}15` }]}>
-                <Ionicons name={a.icon as any} size={22} color={a.color} />
-              </View>
-              <Text style={s.actionLabel}>{a.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {(() => {
+            const firstOpen = campaigns.find((c) => c.status === "OPEN" && !c.userJoined);
+            const fallbackId = firstOpen?.id ?? campaigns[0]?.id;
+            const quickActions: {
+              icon: string;
+              label: string;
+              color: string;
+              onPress: () => void;
+            }[] = [
+              {
+                icon: "add-circle-outline",
+                label: "Join",
+                color: Brand.primary,
+                onPress: () => {
+                  if (fallbackId) router.push(`/campaign/${fallbackId}`);
+                },
+              },
+              {
+                icon: "swap-horizontal-outline",
+                label: "Bridge",
+                color: Brand.secondary,
+                onPress: () => {
+                  if (fallbackId) router.push(`/funding/${fallbackId}`);
+                },
+              },
+              {
+                icon: "shield-checkmark-outline",
+                label: "Escrow",
+                color: Brand.primary,
+                onPress: () => router.push("/(tabs)/wallet"),
+              },
+              {
+                icon: "chatbubble-outline",
+                label: "AI",
+                color: Brand.secondary,
+                onPress: () => router.push("/(tabs)/ai"),
+              },
+              {
+                icon: "ribbon-outline",
+                label: "Proof",
+                color: Brand.warning,
+                onPress: () => router.push("/(tabs)/proof"),
+              },
+            ];
+            return quickActions.map((a, i) => (
+              <TouchableOpacity
+                key={i}
+                style={s.actionItem}
+                onPress={a.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={[s.actionIcon, { backgroundColor: `${a.color}15` }]}>
+                  <Ionicons name={a.icon as any} size={22} color={a.color} />
+                </View>
+                <Text style={s.actionLabel}>{a.label}</Text>
+              </TouchableOpacity>
+            ));
+          })()}
         </View>
 
         {/* Section */}
@@ -117,7 +197,7 @@ export default function CampaignFeedScreen() {
 
         {/* Campaign List */}
         <Animated.View style={{ opacity: fadeAnim }}>
-          {campaigns.map((campaign, idx) => (
+          {campaigns.map((campaign) => (
             <TouchableOpacity
               key={campaign.id}
               style={s.card}
@@ -127,7 +207,7 @@ export default function CampaignFeedScreen() {
               <View style={s.cardRow}>
                 <View style={s.cardIconWrap}>
                   <Ionicons
-                    name={(CARD_ICONS[idx] ?? "cube-outline") as any}
+                    name={(CARD_ICONS[campaign.id] ?? "cube-outline") as any}
                     size={20}
                     color={Brand.primary}
                   />
@@ -220,6 +300,25 @@ const s = StyleSheet.create({
     backgroundColor: Dark.bgCard,
     justifyContent: "center",
     alignItems: "center",
+  },
+  restartBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: `${Brand.primary}12`,
+    borderWidth: 1,
+    borderColor: `${Brand.primary}33`,
+  },
+  restartBtnBusy: {
+    opacity: 0.7,
+  },
+  restartText: {
+    fontSize: 12,
+    color: Brand.primary,
+    fontWeight: "600",
   },
 
   // Balance

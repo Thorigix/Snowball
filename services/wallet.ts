@@ -58,6 +58,14 @@ function hasMetaMaskOnly(): boolean {
   return Boolean(anyGlobal?.ethereum?.isMetaMask);
 }
 
+export const PHANTOM_INSTALL_URL = "https://phantom.app/download";
+export const SOLFLARE_INSTALL_URL = "https://solflare.com/download";
+
+export function isNoSolanaWalletError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return /No Solana browser wallet|Install Phantom or Solflare/i.test(error.message);
+}
+
 function providerName(provider: BrowserWallet): string {
   if (provider.isPhantom) return "Phantom";
   if (provider.isSolflare) return "Solflare";

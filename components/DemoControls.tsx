@@ -122,7 +122,9 @@ export default function DemoControls({ focusCampaignId }: Props) {
       {
         text: "Reset",
         style: "destructive",
-        onPress: () => resetDemoState(),
+        onPress: () => {
+          resetDemoState().catch(() => {});
+        },
       },
     ]);
   };
