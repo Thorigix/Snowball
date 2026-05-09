@@ -341,3 +341,104 @@ Notes:
 - No new Anchor instructions, escrow logic changes, or backend changes were made in this A6 step.
 - No new dependencies were added; the script reuses the existing `ts-mocha`, `chai`, and `@anchor-lang/core` workspace deps.
 - No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. The flow exercises only the on-chain Snowball program.
+
+## Solana Program
+
+Network: Solana Devnet
+
+Program ID:
+
+```text
+2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss
+```
+
+Explorer:
+
+```text
+https://explorer.solana.com/address/2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss?cluster=devnet
+```
+
+Instructions:
+
+- `initialize`
+- `create_campaign`
+- `join_campaign`
+- `mark_shipped`
+- `confirm_delivery`
+- `release_funds`
+
+## Backend
+
+Path: `backend/`
+
+```bash
+cd backend
+npm install
+npm run build
+npm run dev
+```
+
+Endpoints:
+
+- `GET /api/health`
+- `GET /api/campaign`
+- `POST /api/lifi/quote`
+- `POST /api/elevenlabs/summary-audio`
+
+## Environment Variables
+
+Public/demo env names only (do not commit real API keys):
+
+```text
+PORT=3001
+PROGRAM_ID=2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss
+SOLANA_NETWORK=devnet
+BACKEND_URL=http://localhost:3001
+
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+LIFI_API_KEY=
+LIFI_INTEGRATOR=snowball
+```
+
+Do not commit real API keys.
+
+## Handoff Files
+
+- `handoff/a5-devnet-deployment.md`
+- `handoff/a6-devnet-demo-flow.md`
+- `handoff/a10-mobile-integration-handoff.md`
+- `handoff/a-person-final-status.md`
+
+## Final Verification
+
+Anchor:
+
+```bash
+cd anchor
+anchor build
+anchor test
+npm run demo:devnet
+```
+
+Backend:
+
+```bash
+cd backend
+npm run build
+npm run dev
+```
+
+Endpoint test examples:
+
+```bash
+curl http://localhost:3001/api/health
+curl http://localhost:3001/api/campaign
+curl -X POST http://localhost:3001/api/lifi/quote \
+  -H "Content-Type: application/json" \
+  -d '{"fromChain":"base","fromToken":"USDC","toChain":"solana","toToken":"SOL","amount":"10"}'
+curl -X POST http://localhost:3001/api/elevenlabs/summary-audio \
+  -H "Content-Type: application/json" \
+  -d '{"campaignId":"campaign-rtx-5080-demo"}'
+```

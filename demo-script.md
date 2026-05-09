@@ -54,3 +54,22 @@ The script generates fresh ephemeral keypairs (creator, seller, buyer1–buyer3)
 Provider wallet must hold at least 0.7 devnet SOL. Private keys are never printed or saved.
 
 A full sample run (public keys, PDAs, signatures, balance check) is captured in `handoff/a6-devnet-demo-flow.md`.
+
+## A-Person Final Demo Proof
+
+A-person side provides:
+
+- Devnet Program ID
+- Program Explorer link
+- Full devnet escrow lifecycle proof
+- Backend endpoints
+- LI.FI quote endpoint
+- ElevenLabs summary endpoint
+- Mobile integration handoff
+
+Reference files:
+
+- `handoff/a5-devnet-deployment.md`
+- `handoff/a6-devnet-demo-flow.md`
+- `handoff/a10-mobile-integration-handoff.md`
+- `handoff/a-person-final-status.md`
