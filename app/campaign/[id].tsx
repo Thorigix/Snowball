@@ -125,7 +125,7 @@ export default function CampaignDetailScreen() {
               <Text style={s.primaryBtnText}>Confirm Delivery</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={s.aiBtn} onPress={() => router.push("/(tabs)/ai")} activeOpacity={0.85}>
+          <TouchableOpacity style={s.aiBtn} onPress={() => router.push({ pathname: "/(tabs)/ai", params: { campaignId: campaign.id } })} activeOpacity={0.85}>
             <Ionicons name="sparkles" size={20} color={Brand.primary} />
             <Text style={s.aiBtnText}>Ask AI Assistant</Text>
           </TouchableOpacity>

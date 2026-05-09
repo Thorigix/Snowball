@@ -6,13 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Dark, Brand } from "@/constants/theme";
+import { Dark, Brand, Spacing } from "@/constants/theme";
 import ElevenLabsAgent from "@/components/ElevenLabsAgent";
-import { getAiCampaignSummary, getAiRiskSummary } from "@/services/mock-data";
+import { getAiCampaignSummary, getAiRiskSummary, allCampaigns } from "@/services/mock-data";
+import { useLocalSearchParams } from "expo-router";
+import { Campaign } from "@/types";
 
 type Message = {
   id: string;
@@ -21,10 +22,17 @@ type Message = {
 };
 
 export default function AiTabScreen() {
+  const params = useLocalSearchParams<{ campaignId?: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [agentStatus, setAgentStatus] = useState("disconnected");
   const scrollRef = useRef<ScrollView>(null);
+
+  // Find focused campaign if coming from campaign detail
+  const focusCampaign: Campaign | undefined = params.campaignId
+    ? allCampaigns.find((c) => c.id === params.campaignId)
+    : undefined;
 
   const addTranscript = (role: "user" | "agent", text: string) => {
     setMessages((prev) => [
@@ -34,7 +42,7 @@ export default function AiTabScreen() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // Text-based fallback for when voice isn't available
+  // Text-based AI for typed questions
   const sendTextMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const t = text.trim();
@@ -51,11 +59,20 @@ export default function AiTabScreen() {
         "The seller cannot withdraw until enough buyers confirm delivery. " +
         "If the seller doesn't ship, you get a full refund.";
     } else if (lower.includes("campaign") || lower.includes("explain")) {
-      response = await getAiCampaignSummary("campaign-rtx-5080-demo");
-    } else if (lower.includes("safe") || lower.includes("risk") || lower.includes("seller")) {
+      const id = focusCampaign?.id || "campaign-rtx-5080-demo";
+      response = await getAiCampaignSummary(id);
+    } else if (
+      lower.includes("safe") ||
+      lower.includes("risk") ||
+      lower.includes("seller")
+    ) {
       const risk = await getAiRiskSummary();
       response = `Risk Level: ${risk.riskLevel.toUpperCase()} - ${risk.summary}`;
-    } else if (lower.includes("lifi") || lower.includes("bridge") || lower.includes("chain")) {
+    } else if (
+      lower.includes("lifi") ||
+      lower.includes("bridge") ||
+      lower.includes("chain")
+    ) {
       response =
         "LI.FI finds the best route to bridge tokens from any chain to Solana. " +
         "You can start with USDC on Base and get SOL for your escrow deposit.";
@@ -78,11 +95,15 @@ export default function AiTabScreen() {
       {/* Header */}
       <View style={s.header}>
         <View>
-          <Text style={s.headerTitle}>AI Assistant</Text>
-          <Text style={s.headerSub}>Powered by ElevenLabs</Text>
+          <Text style={s.headerTitle}>Snowball AI</Text>
+          <Text style={s.headerSub}>
+            {focusCampaign
+              ? `Analyzing: ${focusCampaign.title}`
+              : "Voice Campaign Summarizer"}
+          </Text>
         </View>
         <View style={s.headerBadge}>
-          <Ionicons name="sparkles" size={14} color={Brand.primary} />
+          <Ionicons name="mic" size={16} color={Brand.primary} />
         </View>
       </View>
 
@@ -93,7 +114,30 @@ export default function AiTabScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Voice Agent */}
-        <ElevenLabsAgent onTranscript={addTranscript} />
+        <ElevenLabsAgent
+          focusCampaign={focusCampaign}
+          onTranscript={addTranscript}
+          onStatusChange={(s) => setAgentStatus(s)}
+        />
+
+        {/* Quick ask chips */}
+        <View style={s.chipRow}>
+          {[
+            { q: "Tell me about the campaigns", icon: "list-outline" as const },
+            { q: "How does escrow work?", icon: "shield-checkmark-outline" as const },
+            { q: "Is this seller safe?", icon: "alert-circle-outline" as const },
+          ].map((chip, i) => (
+            <TouchableOpacity
+              key={i}
+              style={s.chip}
+              onPress={() => sendTextMessage(chip.q)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={chip.icon} size={14} color={Brand.primary} />
+              <Text style={s.chipText}>{chip.q}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Divider */}
         {messages.length > 0 && (
@@ -203,6 +247,25 @@ const s = StyleSheet.create({
   body: { flex: 1 },
   bodyContent: { paddingHorizontal: 24 },
 
+  // Quick chips
+  chipRow: {
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: Dark.bgCard,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: Dark.border,
+  },
+  chipText: { fontSize: 13, color: Dark.textSecondary },
+
   // Divider
   divider: {
     flexDirection: "row",
@@ -227,7 +290,12 @@ const s = StyleSheet.create({
     marginRight: 8,
     marginTop: 4,
   },
-  bubbleContent: { borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, maxWidth: "90%" },
+  bubbleContent: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    maxWidth: "90%",
+  },
   userContent: { backgroundColor: Brand.primary, borderBottomRightRadius: 4 },
   agentContent: { backgroundColor: Dark.bgCard, borderBottomLeftRadius: 4 },
   bubbleText: { fontSize: 14, lineHeight: 20 },
