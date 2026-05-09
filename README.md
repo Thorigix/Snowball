@@ -136,3 +136,39 @@ npm install
 npm run dev
 ```
 
+## A5 ElevenLabs TTS Status
+
+A5 connects the Snowball backend to the real ElevenLabs Text-to-Speech API.
+
+Endpoint:
+
+```http
+POST /api/elevenlabs/summary-audio
+```
+
+Request body:
+
+```json
+{
+  "campaignId": "campaign-rtx-5080-demo"
+}
+```
+
+Behavior:
+
+- The endpoint builds a fixed Snowball campaign summary text.
+- If `ELEVENLABS_API_KEY` or `ELEVENLABS_VOICE_ID` is missing, the endpoint returns a JSON fallback containing the summary text and a `fallback: true` flag.
+- If both env vars are set, the backend calls the ElevenLabs Text-to-Speech API at `https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}?output_format=mp3_44100_128` using the model from `ELEVENLABS_MODEL_ID` (default `eleven_multilingual_v2`).
+- On success, the endpoint streams back the MP3 audio with `Content-Type: audio/mpeg`, `Cache-Control: no-store`, `X-Snowball-Audio-Provider: elevenlabs`, and `X-Snowball-Fallback: false`.
+- On ElevenLabs error responses or fetch failures, the endpoint returns HTTP 502 with a JSON fallback payload that includes the summary text. The server does not crash.
+
+Required environment variables (see `.env.example`):
+
+```text
+ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+```
+
+The API key is never logged and never returned in responses. Do not commit any `.env` file.
+
