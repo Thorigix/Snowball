@@ -343,19 +343,31 @@ const s = StyleSheet.create({
   // Actions
   actions: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 10,
     marginBottom: 36,
-    paddingHorizontal: 8,
   },
-  actionItem: { alignItems: "center", gap: 6 },
+  actionItem: {
+    flexGrow: 1,
+    flexBasis: "30%",
+    minHeight: 78,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: Dark.bgCard,
+    borderWidth: 1,
+    borderColor: Dark.border,
+    borderRadius: 14,
+    paddingVertical: 10,
+  },
   actionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },
-  actionLabel: { fontSize: 11, color: Dark.textSecondary, fontWeight: "500" },
+  actionLabel: { fontSize: 12, color: Dark.textSecondary, fontWeight: "600" },
 
   // Section
   sectionRow: {
@@ -381,6 +393,8 @@ const s = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Dark.border,
   },
   cardRow: { flexDirection: "row", alignItems: "center" },
   cardIconWrap: {

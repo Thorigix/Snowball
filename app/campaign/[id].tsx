@@ -46,8 +46,14 @@ export default function CampaignDetailScreen() {
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={s.heroCard}>
-          <View style={s.heroImg}>
-            <Ionicons name="hardware-chip" size={48} color={Brand.primary} />
+          <View style={s.heroIconRow}>
+            <View style={s.heroImg}>
+              <Ionicons name="hardware-chip" size={34} color={Brand.primary} />
+            </View>
+            <View style={s.heroMetaBlock}>
+              <Text style={s.heroEyebrow}>LIVE GROUP BUY</Text>
+              <Text style={s.heroMetaText}>Protected by Solana escrow</Text>
+            </View>
           </View>
           <View style={s.heroTitleRow}>
             <Text style={s.heroTitle}>{campaign.title}</Text>
@@ -72,11 +78,17 @@ export default function CampaignDetailScreen() {
 
         {/* Progress */}
         <View style={s.card}>
-          <Text style={s.label}>FUNDING PROGRESS</Text>
+          <View style={s.progressHeader}>
+            <View>
+              <Text style={s.label}>FUNDING PROGRESS</Text>
+              <Text style={s.progressTitle}>{Math.round(prog * 100)}% funded</Text>
+            </View>
+            <Text style={s.timeText}>{timeLeft}</Text>
+          </View>
           <View style={s.progBar}><View style={[s.progFill, { width: `${prog*100}%` }]} /></View>
           <View style={s.progRow}>
             <Text style={s.progText}><Text style={s.progHi}>{campaign.currentParticipants}</Text> / {campaign.targetParticipants} buyers</Text>
-            <Text style={s.timeText}>{timeLeft}</Text>
+            <Text style={s.progText}>{campaign.totalDeposited} {campaign.tokenSymbol} locked</Text>
           </View>
         </View>
 
@@ -97,11 +109,15 @@ export default function CampaignDetailScreen() {
 
         {/* Trust */}
         <View style={s.trustCard}>
-          <Ionicons name="shield-checkmark" size={24} color={Brand.primary} />
-          <Text style={s.trustTitle}>Escrow Protection</Text>
-          <Text style={s.trustDesc}>
-            Your funds are locked in a Solana escrow program. The seller cannot withdraw until {Math.ceil(campaign.targetParticipants*0.66)} of {campaign.targetParticipants} buyers confirm delivery.
-          </Text>
+          <View style={s.trustIcon}>
+            <Ionicons name="shield-checkmark" size={22} color={Brand.primary} />
+          </View>
+          <View style={s.trustCopy}>
+            <Text style={s.trustTitle}>Escrow Protection</Text>
+            <Text style={s.trustDesc}>
+              Your funds are locked in a Solana escrow program. The seller cannot withdraw until {Math.ceil(campaign.targetParticipants*0.66)} of {campaign.targetParticipants} buyers confirm delivery.
+            </Text>
+          </View>
         </View>
 
         <View style={s.riskCard}>
@@ -211,10 +227,14 @@ const s = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: Radius.full, backgroundColor: Dark.bgCard, justifyContent: "center", alignItems: "center" },
   topTitle: { flex: 1, textAlign: "center", fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.text },
   content: { padding: Spacing.xl },
-  heroCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.xl, padding: Spacing.xl, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg, ...Shadows.card },
-  heroImg: { width: "100%", height: 120, borderRadius: Radius.lg, backgroundColor: "rgba(91, 181, 162,0.06)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.lg },
+  heroCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.xl, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg, ...Shadows.card },
+  heroIconRow: { flexDirection: "row", alignItems: "center", gap: Spacing.md, marginBottom: Spacing.lg },
+  heroImg: { width: 58, height: 58, borderRadius: Radius.md, backgroundColor: "rgba(91, 181, 162,0.10)", justifyContent: "center", alignItems: "center" },
+  heroMetaBlock: { flex: 1 },
+  heroEyebrow: { fontSize: Typography.tiny, color: Brand.primary, fontWeight: Typography.bold, letterSpacing: 0.8, marginBottom: 4 },
+  heroMetaText: { fontSize: Typography.caption, color: Dark.textSecondary },
   heroTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: Spacing.sm },
-  heroTitle: { fontSize: Typography.h2, fontWeight: Typography.bold, color: Dark.text, flex: 1, marginRight: Spacing.md },
+  heroTitle: { fontSize: Typography.h2, fontWeight: Typography.bold, color: Dark.text, flex: 1, marginRight: Spacing.md, lineHeight: 30 },
   badgeStack: { alignItems: "flex-end", gap: Spacing.xs },
   badge: { paddingHorizontal: Spacing.sm, paddingVertical: 4, borderRadius: Radius.sm },
   badgeText: { fontSize: Typography.tiny, fontWeight: Typography.semiBold, textTransform: "uppercase", letterSpacing: 0.5 },
@@ -222,23 +242,27 @@ const s = StyleSheet.create({
   joinedBadgeText: { color: Brand.success },
   sellerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   sellerName: { fontSize: Typography.bodySmall, color: Dark.textSecondary },
-  desc: { fontSize: Typography.bodySmall, color: Dark.textSecondary, lineHeight: 22, marginBottom: Spacing.lg },
-  card: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg },
-  label: { fontSize: Typography.tiny, color: Dark.textMuted, letterSpacing: 0.8, marginBottom: Spacing.md },
+  desc: { fontSize: Typography.bodySmall, color: Dark.textSecondary, lineHeight: 23, marginBottom: Spacing.lg },
+  card: { backgroundColor: Dark.bgCard, borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg },
+  label: { fontSize: Typography.tiny, color: Dark.textMuted, letterSpacing: 0.8, marginBottom: Spacing.xs },
+  progressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: Spacing.md, marginBottom: Spacing.md },
+  progressTitle: { fontSize: Typography.h4, color: Dark.text, fontWeight: Typography.bold },
   progBar: { height: 8, backgroundColor: Dark.surface, borderRadius: Radius.full, overflow: "hidden", marginBottom: Spacing.sm },
   progFill: { height: "100%", backgroundColor: Brand.primary, borderRadius: Radius.full },
   progRow: { flexDirection: "row", justifyContent: "space-between" },
   progText: { fontSize: Typography.caption, color: Dark.textSecondary },
   progHi: { color: Brand.primary, fontWeight: Typography.semiBold },
-  timeText: { fontSize: Typography.caption, color: Dark.textMuted },
+  timeText: { fontSize: Typography.caption, color: Dark.textSecondary, marginTop: 2 },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md, marginBottom: Spacing.lg },
-  statCard: { width: "47%", backgroundColor: Dark.bgCard, borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border },
+  statCard: { flexGrow: 1, flexBasis: "45%", backgroundColor: Dark.bgCard, borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, minHeight: 84, justifyContent: "center" },
   statLabel: { fontSize: Typography.tiny, color: Dark.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: Spacing.xs },
   statValue: { fontSize: Typography.h4, fontWeight: Typography.bold, color: Dark.text },
-  trustCard: { backgroundColor: "rgba(91, 181, 162,0.06)", borderRadius: Radius.lg, padding: Spacing.xl, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.15)", alignItems: "center", marginBottom: Spacing.xl },
-  trustTitle: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Brand.primary, marginTop: Spacing.sm, marginBottom: Spacing.sm },
-  trustDesc: { fontSize: Typography.caption, color: Dark.textSecondary, textAlign: "center", lineHeight: 18 },
-  riskCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
+  trustCard: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md, backgroundColor: "rgba(91, 181, 162,0.07)", borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.18)", marginBottom: Spacing.xl },
+  trustIcon: { width: 40, height: 40, borderRadius: Radius.full, backgroundColor: "rgba(91, 181, 162,0.12)", alignItems: "center", justifyContent: "center" },
+  trustCopy: { flex: 1 },
+  trustTitle: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Brand.primary, marginBottom: Spacing.xs },
+  trustDesc: { fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 19 },
+  riskCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
   riskHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.md },
   riskTitle: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.text },
   riskScore: { width: 52, height: 52, borderRadius: Radius.full, borderWidth: 2, alignItems: "center", justifyContent: "center", backgroundColor: Dark.surface },
@@ -246,7 +270,7 @@ const s = StyleSheet.create({
   riskRows: { gap: Spacing.sm },
   riskRow: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.sm, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: Dark.border },
   riskRowLabel: { fontSize: Typography.caption, color: Dark.textMuted, marginBottom: 2 },
-  riskRowValue: { fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 17 },
+  riskRowValue: { fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 18 },
   actions: { gap: Spacing.md },
   primaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md },
   primaryBtnDisabled: { backgroundColor: Dark.bgCard, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.25)" },

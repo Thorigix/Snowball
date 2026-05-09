@@ -72,6 +72,9 @@ export default function ProofScreen() {
           <View>
             <Text style={s.kicker}>Judge Proof</Text>
             <Text style={s.title}>Grant-ready evidence</Text>
+            <Text style={s.headerSub}>
+              Live devnet state, sponsor fit, and grant narrative in one place.
+            </Text>
           </View>
           <View style={s.scoreBadge}>
             <Text style={s.scoreValue}>{proofScore}</Text>
@@ -81,7 +84,7 @@ export default function ProofScreen() {
 
         <View style={s.heroPanel}>
           <View style={s.heroTop}>
-            <View>
+            <View style={s.heroTitleBlock}>
               <Text style={s.panelLabel}>LIVE DEVNET CAMPAIGN</Text>
               <Text style={s.campaignTitle}>{liveCampaign?.title ?? "Snowball escrow"}</Text>
             </View>
@@ -90,6 +93,12 @@ export default function ProofScreen() {
                 {liveCampaign?.status ?? "OPEN"}
               </Text>
             </View>
+          </View>
+          <View style={s.statusRail}>
+            <View style={s.statusStepActive} />
+            <View style={s.statusStepActive} />
+            <View style={liveCampaign?.status === "OPEN" ? s.statusStep : s.statusStepActive} />
+            <View style={liveCampaign?.status === "RELEASED" ? s.statusStepActive : s.statusStep} />
           </View>
           <View style={s.metricsGrid}>
             <Metric label="Buyers" value={`${liveCampaign?.currentParticipants ?? 0}/${liveCampaign?.targetParticipants ?? 0}`} />
@@ -103,7 +112,7 @@ export default function ProofScreen() {
           </View>
         </View>
 
-        <SectionTitle title="Why It Can Win" />
+        <SectionTitle title="Why It Can Win" subtitle="What judges should remember after a 60-second scan." />
         <View style={s.reasonList}>
           {grantReasons.map((reason, index) => (
             <View key={reason} style={s.reasonItem}>
@@ -115,7 +124,7 @@ export default function ProofScreen() {
           ))}
         </View>
 
-        <SectionTitle title="Partner Fit" />
+        <SectionTitle title="Partner Fit" subtitle="Each integration maps to a Dev3pack sponsor surface." />
         <View style={s.partnerGrid}>
           {partnerProof.map((item) => (
             <View key={item.name} style={s.partnerCard}>
@@ -128,7 +137,7 @@ export default function ProofScreen() {
           ))}
         </View>
 
-        <SectionTitle title="Transaction Trail" />
+        <SectionTitle title="Transaction Trail" subtitle="Tap any row to verify the devnet transaction on Explorer." />
         <View style={s.txList}>
           {txs.length === 0 ? (
             <View style={s.emptyTx}>
@@ -173,8 +182,13 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SectionTitle({ title }: { title: string }) {
-  return <Text style={s.sectionTitle}>{title}</Text>;
+function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <View style={s.sectionHeader}>
+      <Text style={s.sectionTitle}>{title}</Text>
+      <Text style={s.sectionSubtitle}>{subtitle}</Text>
+    </View>
+  );
 }
 
 function AddressButton({ label, value }: { label: string; value?: string }) {
@@ -201,8 +215,9 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.xl,
+    alignItems: "flex-start",
+    gap: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
   kicker: {
     color: Brand.warning,
@@ -211,15 +226,24 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   title: { color: Dark.text, fontSize: Typography.h2, fontWeight: Typography.bold },
+  headerSub: {
+    color: Dark.textSecondary,
+    fontSize: Typography.caption,
+    lineHeight: 18,
+    maxWidth: 280,
+    marginTop: 6,
+  },
   scoreBadge: {
     flexDirection: "row",
     alignItems: "flex-end",
     backgroundColor: `${Brand.primary}14`,
     borderColor: `${Brand.primary}35`,
     borderWidth: 1,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    minWidth: 82,
+    justifyContent: "center",
   },
   scoreValue: { color: Brand.primary, fontSize: 28, fontWeight: Typography.bold },
   scoreLabel: { color: Dark.textMuted, fontSize: Typography.caption, marginBottom: 5 },
@@ -227,9 +251,9 @@ const s = StyleSheet.create({
     backgroundColor: Dark.bgCard,
     borderColor: Dark.border,
     borderWidth: 1,
-    borderRadius: Radius.xl,
+    borderRadius: Radius.lg,
     padding: Spacing.xl,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
   heroTop: {
     flexDirection: "row",
@@ -238,6 +262,7 @@ const s = StyleSheet.create({
     gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
+  heroTitleBlock: { flex: 1 },
   panelLabel: {
     color: Dark.textMuted,
     fontSize: Typography.tiny,
@@ -245,15 +270,35 @@ const s = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 6,
   },
-  campaignTitle: { color: Dark.text, fontSize: Typography.h3, fontWeight: Typography.bold },
-  statusPill: { borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 5 },
+  campaignTitle: { color: Dark.text, fontSize: Typography.h3, fontWeight: Typography.bold, lineHeight: 26 },
+  statusPill: { borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 6, minWidth: 76, alignItems: "center" },
   statusText: { fontSize: Typography.tiny, fontWeight: Typography.bold },
+  statusRail: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  statusStep: {
+    flex: 1,
+    height: 5,
+    borderRadius: Radius.full,
+    backgroundColor: Dark.surfaceLight,
+  },
+  statusStepActive: {
+    flex: 1,
+    height: 5,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.primary,
+  },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md },
   metricCard: {
-    width: "47%",
+    flexGrow: 1,
+    flexBasis: "45%",
     backgroundColor: Dark.surface,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     padding: Spacing.md,
+    minHeight: 74,
+    justifyContent: "center",
   },
   metricLabel: {
     color: Dark.textMuted,
@@ -268,19 +313,29 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(168, 124, 219, 0.08)",
     borderColor: "rgba(168, 124, 219, 0.24)",
     borderWidth: 1,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     padding: Spacing.md,
+    minHeight: 64,
+    justifyContent: "center",
   },
   addressButtonDisabled: { opacity: 0.6 },
   addressLabel: { color: Dark.textMuted, fontSize: Typography.tiny, marginBottom: 6 },
   addressValueRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   addressValue: { color: Dark.text, fontSize: Typography.caption, fontFamily: "monospace" },
+  sectionHeader: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
   sectionTitle: {
     color: Dark.text,
     fontSize: Typography.h4,
     fontWeight: Typography.bold,
-    marginBottom: Spacing.md,
-    marginTop: Spacing.sm,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    color: Dark.textSecondary,
+    fontSize: Typography.caption,
+    lineHeight: 18,
   },
   reasonList: { gap: Spacing.sm, marginBottom: Spacing.xl },
   reasonItem: {
@@ -288,7 +343,7 @@ const s = StyleSheet.create({
     alignItems: "flex-start",
     gap: Spacing.md,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Dark.border,
     padding: Spacing.md,
@@ -302,12 +357,14 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   reasonNumText: { color: Brand.warning, fontSize: Typography.caption, fontWeight: Typography.bold },
-  reasonText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
-  partnerGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md, marginBottom: Spacing.xl },
+  reasonText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.bodySmall, lineHeight: 20 },
+  partnerGrid: { gap: Spacing.md, marginBottom: Spacing.xl },
   partnerCard: {
-    width: "47%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Dark.border,
     padding: Spacing.md,
@@ -319,17 +376,16 @@ const s = StyleSheet.create({
     backgroundColor: `${Brand.primary}14`,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.sm,
   },
   partnerName: { color: Dark.text, fontSize: Typography.bodySmall, fontWeight: Typography.bold, marginBottom: 5 },
-  partnerDetail: { color: Dark.textMuted, fontSize: Typography.caption, lineHeight: 17 },
+  partnerDetail: { color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
   txList: { gap: Spacing.sm },
   emptyTx: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: Spacing.sm,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Dark.border,
     padding: Spacing.md,
@@ -340,7 +396,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Dark.border,
     padding: Spacing.md,
@@ -355,6 +411,6 @@ const s = StyleSheet.create({
   },
   txBody: { flex: 1 },
   txTitle: { color: Dark.text, fontSize: Typography.caption, fontWeight: Typography.semiBold },
-  txNote: { color: Dark.textMuted, fontSize: Typography.caption, lineHeight: 17, marginTop: 2 },
+  txNote: { color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18, marginTop: 2 },
   txHash: { color: Brand.solana, fontSize: Typography.tiny, fontFamily: "monospace" },
 });
