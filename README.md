@@ -442,3 +442,21 @@ curl -X POST http://localhost:3001/api/elevenlabs/summary-audio \
   -H "Content-Type: application/json" \
   -d '{"campaignId":"campaign-rtx-5080-demo"}'
 ```
+
+## Environment Examples
+
+The repository includes example environment files:
+
+```text
+.env.example
+backend/.env.example
+handoff/mobile.env.example
+```
+
+Rules:
+
+- Copy `backend/.env.example` to `backend/.env` for local backend runtime.
+- Copy `handoff/mobile.env.example` values into the mobile app environment.
+- Do not commit real `.env` files.
+- Do not expose `ELEVENLABS_API_KEY` or `LIFI_API_KEY` to the mobile app.
+- For physical phone testing, replace localhost backend URL with an ngrok or LAN URL.

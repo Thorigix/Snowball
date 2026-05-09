@@ -123,3 +123,41 @@ The mobile app should not receive:
 - any .env file
 
 For physical phone testing, BACKEND_URL may need to be replaced later with an ngrok or LAN URL. Do not change this in the repository yet.
+
+## Environment Files
+
+B person should use:
+
+```text
+handoff/mobile.env.example
+```
+
+Backend runtime uses:
+
+```text
+backend/.env.example
+```
+
+Mobile must only use public values:
+
+```text
+EXPO_PUBLIC_BACKEND_URL
+EXPO_PUBLIC_SOLANA_NETWORK
+EXPO_PUBLIC_PROGRAM_ID
+EXPO_PUBLIC_CAMPAIGN_ID
+EXPO_PUBLIC_PROGRAM_EXPLORER
+EXPO_PUBLIC_LIFI_ENABLED
+EXPO_PUBLIC_ELEVENLABS_ENABLED
+```
+
+Mobile must not receive:
+
+```text
+ELEVENLABS_API_KEY
+LIFI_API_KEY
+Solana private key
+seed phrase
+wallet secret array
+```
+
+For phone testing, replace `EXPO_PUBLIC_BACKEND_URL=http://localhost:3001` with an ngrok or LAN URL.
