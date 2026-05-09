@@ -447,15 +447,12 @@ export async function getDemoPreflight(): Promise<DemoPreflight> {
     warnings.push("Campaign not initialized yet; press Restart Demo or open the campaign endpoint");
   }
 
-  const lifiMode = process.env.LIFI_API_KEY ? "live" : "fallback";
+  const lifiMode = "live";
   const elevenLabsMode =
     process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID
       ? "live"
       : "missing_env";
 
-  if (lifiMode === "fallback") {
-    warnings.push("LI.FI API key missing; quote preview uses fallback route when live params fail");
-  }
   if (elevenLabsMode === "missing_env") {
     warnings.push("ElevenLabs credentials missing; AI voice/TTS uses fallback where available");
   }

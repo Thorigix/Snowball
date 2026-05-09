@@ -100,6 +100,8 @@ export type LifiRouteSummary = {
   tool?: string;
   fromAmount?: string;
   toAmount?: string;
+  fromTokenAddress?: string;
+  approvalAddress?: string;
   transactionRequest?: Record<string, unknown>;
   requiredParams?: Record<string, string>;
 };

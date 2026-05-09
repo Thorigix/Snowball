@@ -14,7 +14,7 @@ router.get("/preflight", async (_req: Request, res: Response) => {
       rpcUrl: process.env.ANCHOR_PROVIDER_URL || "https://api.devnet.solana.com",
       providerBalanceSol: null,
       campaignReachable: false,
-      lifiMode: process.env.LIFI_API_KEY ? "live" : "fallback",
+      lifiMode: "live",
       elevenLabsMode:
         process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID
           ? "live"

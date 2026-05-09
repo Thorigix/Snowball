@@ -154,43 +154,31 @@ export async function fetchLifiQuote(
   const data = await requestJson<any>("/api/lifi/quote", {
     method: "POST",
     body: JSON.stringify(params),
-  });
+  }, 15000);
 
-  if (data.fallback) {
-    return {
-      fromChain: data.fromChain ?? params.fromChain,
-      fromToken: data.fromToken ?? params.fromToken,
-      toChain: "solana",
-      toToken: "SOL",
-      estimatedGasUsd: data.estimatedGasUsd ?? "0",
-      estimatedTimeSeconds: data.estimatedTimeSeconds ?? 300,
-      routeId: data.routeId ?? "lifi-fallback-route",
-      summary:
-        data.summary ??
-        `Fallback route from ${params.fromChain} ${params.fromToken} to Solana SOL`,
-      providerMode: data.reason ? "missing_params" : "fallback",
-      requiredParams: {
-        fromChain: params.fromChain,
-        toChain: params.toChain,
-        fromToken: params.fromToken,
-        toToken: params.toToken,
-        fromAmount: params.fromAmount,
-        fromAddress: params.fromAddress ?? "",
-        toAddress: params.toAddress ?? "",
-      },
-    };
-  }
+  const estimate = data.estimate ?? {};
+  const gasUsd = Array.isArray(estimate.gasCosts)
+    ? estimate.gasCosts
+        .reduce((total: number, item: any) => total + Number(item?.amountUsd ?? 0), 0)
+        .toFixed(2)
+    : "0";
 
   return {
     fromChain: params.fromChain,
     fromToken: params.fromToken,
     toChain: "solana",
     toToken: "SOL",
-    estimatedGasUsd: data.estimate?.gasCosts?.[0]?.amountUsd ?? "0",
-    estimatedTimeSeconds: data.estimate?.executionDuration ?? 300,
+    estimatedGasUsd: gasUsd,
+    estimatedTimeSeconds: estimate.executionDuration ?? 300,
     routeId: data.routeId ?? data.tool ?? "lifi-live-route",
-    summary: `Bridge ${params.fromToken} to Solana via ${data.tool ?? "LI.FI"}`,
+    summary: `Bridge ${params.fromToken} to Solana SOL via ${data.tool ?? "LI.FI"}`,
     providerMode: "live",
+    tool: data.tool,
+    fromAmount: data.action?.fromAmount,
+    toAmount: estimate.toAmount,
+    fromTokenAddress: data.action?.fromToken?.address,
+    approvalAddress: estimate.approvalAddress,
+    transactionRequest: data.transactionRequest,
     requiredParams: {
       fromChain: params.fromChain,
       toChain: params.toChain,

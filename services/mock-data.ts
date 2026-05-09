@@ -6,7 +6,7 @@
  * existing screens keep working; new hooks (use-mock-store) layer reactivity.
  */
 
-import { Campaign, Contribution, LifiRouteSummary } from "@/types";
+import { Campaign, Contribution } from "@/types";
 import {
   fetchBackendCampaign,
   mutateBackendCampaign,
@@ -292,24 +292,6 @@ export async function refreshCampaignsFromBackend(): Promise<void> {
   } catch (error) {
     console.warn("[Backend] Campaign sync failed, using local demo data", error);
   }
-}
-
-// ─── LI.FI Mock ─────────────────────────────────────────────────────
-
-export const mockLifiRoute: LifiRouteSummary = {
-  fromChain: "Base",
-  fromToken: "USDC",
-  toChain: "solana",
-  toToken: "SOL",
-  estimatedGasUsd: "2.14",
-  estimatedTimeSeconds: 180,
-  routeId: "route_demo_123",
-  summary: "Bridge 500 USDC from Base → Solana SOL via LI.FI",
-};
-
-export async function getLifiQuoteMock(): Promise<LifiRouteSummary> {
-  await new Promise((r) => setTimeout(r, 800));
-  return mockLifiRoute;
 }
 
 // ─── AI Summaries (mock fallback) ───────────────────────────────────

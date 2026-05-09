@@ -46,7 +46,7 @@ const TOKEN_ADDRESSES: Record<string, Record<string, string>> = {
     ETH: NATIVE_EVM_TOKEN,
     WETH: "0x4200000000000000000000000000000000000006",
     USDC: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-    USDT: "0x94b008aD44wE1a170aB4aE5fD86390e58c4aA58",
+    USDT: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
   },
 };
 
@@ -109,16 +109,21 @@ router.post("/quote", async (req: Request, res: Response) => {
     });
   }
 
+  const liveFromChain = fromChain as string;
+  const liveToChain = toChain as string;
+  const liveFromToken = fromToken as string;
+  const liveToToken = toToken as string;
+
   const integrator =
     process.env.LIFI_INTEGRATOR && process.env.LIFI_INTEGRATOR.trim().length > 0
       ? process.env.LIFI_INTEGRATOR
       : "snowball";
 
   const params = new URLSearchParams({
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
+    fromChain: liveFromChain,
+    toChain: liveToChain,
+    fromToken: liveFromToken,
+    toToken: liveToToken,
     fromAmount: fromAmount as string,
     fromAddress: fromAddress as string,
     toAddress: toAddress as string,
@@ -161,10 +166,10 @@ router.post("/quote", async (req: Request, res: Response) => {
     return res.json({
       provider: "lifi",
       routeId,
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
+      fromChain: liveFromChain,
+      toChain: liveToChain,
+      fromToken: liveFromToken,
+      toToken: liveToToken,
       tool: quote.tool,
       action: quote.action,
       estimate: quote.estimate,
