@@ -213,3 +213,58 @@ curl -X POST http://localhost:3001/api/lifi/quote \
   -d '{"fromChain":"base","fromToken":"USDC","toChain":"solana","toToken":"SOL","amount":"10"}'
 ```
 
+
+## A5 Devnet Deployment Status
+
+The Snowball Anchor program has been deployed to Solana Devnet.
+
+Network:
+
+```text
+Solana Devnet
+RPC: https://api.devnet.solana.com
+```
+
+Program ID:
+
+```text
+2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss
+```
+
+Upgrade authority:
+
+```text
+9ybegvEC4kzW7V9nPgY9qDBMgNsPEGgZYZE6GxhZstwD
+```
+
+ProgramData address:
+
+```text
+8bxb2cDPzNs1bk4Ym2wcTJiYPHfXW46hh9znmFCdVhaD
+```
+
+Solana Explorer:
+
+```text
+https://explorer.solana.com/address/2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss?cluster=devnet
+```
+
+Verification:
+
+```bash
+solana program show 2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss --url devnet
+```
+
+Mobile handoff file:
+
+```text
+handoff/a5-devnet-deployment.md
+```
+
+Notes:
+
+- `Anchor.toml` declares the program under both `[programs.localnet]` and `[programs.devnet]` so local tests stay usable while the devnet deployment is addressable.
+- `declare_id!` in `programs/snowball_escrow/src/lib.rs` matches `anchor keys list`; no `anchor keys sync` was required.
+- All 11 Anchor tests pass against localnet prior to deploy.
+- No new Anchor instructions, escrow logic changes, refund flow, or demo seed flow were added in A5.
+- No native, local, on-device, embedded, or self-hosted ML model dependency was introduced. AI features remain external-API only.

@@ -20,3 +20,9 @@ Release rule: 2 of 3 delivery confirmations release funds to seller
 ## Notes
 
 This demo uses devnet SOL for speed. The production version can extend the escrow to SPL USDC vaults.
+
+## Devnet Deployment
+
+Network: Solana Devnet  
+Program ID: 2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss  
+Explorer: https://explorer.solana.com/address/2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss?cluster=devnet
