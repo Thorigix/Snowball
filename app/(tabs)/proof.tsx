@@ -58,6 +58,12 @@ const usdcVaultInterfaces = [
   "Refund and release instructions",
 ];
 
+const localImpact = [
+  "Hardware clubs can pool deposits for GPUs, dev kits, and lab parts without one treasurer holding everyone funds.",
+  "Book and course groups can coordinate bulk orders with refund and delivery-confirmation paths.",
+  "Student trips and global hub meetups can collect deposits while keeping seller release rule-based and auditable.",
+];
+
 function shortHash(value?: string) {
   if (!value) return "Unavailable";
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
@@ -134,6 +140,20 @@ export default function ProofScreen() {
                 <Text style={s.reasonNumText}>{index + 1}</Text>
               </View>
               <Text style={s.reasonText}>{reason}</Text>
+            </View>
+          ))}
+        </View>
+
+        <SectionTitle title="Local Impact" subtitle="A student-club wedge that makes the consumer escrow use case concrete." />
+        <View style={s.impactPanel}>
+          <View style={s.impactTop}>
+            <Ionicons name="school-outline" size={20} color={Brand.primary} />
+            <Text style={s.impactTitle}>Student clubs buy together, safely</Text>
+          </View>
+          {localImpact.map((item) => (
+            <View key={item} style={s.impactRow}>
+              <View style={s.impactDot} />
+              <Text style={s.impactText}>{item}</Text>
             </View>
           ))}
         </View>
@@ -402,6 +422,37 @@ const s = StyleSheet.create({
   },
   reasonNumText: { color: Brand.warning, fontSize: Typography.caption, fontWeight: Typography.bold },
   reasonText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.bodySmall, lineHeight: 20 },
+  impactPanel: {
+    backgroundColor: Dark.bgCard,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Dark.border,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  impactTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  impactTitle: { color: Dark.text, fontSize: Typography.body, fontWeight: Typography.bold },
+  impactRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Dark.border,
+  },
+  impactDot: {
+    width: 6,
+    height: 6,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.primary,
+    marginTop: 6,
+  },
+  impactText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
   milestoneGrid: { gap: Spacing.sm, marginBottom: Spacing.xl },
   milestoneCard: {
     flexDirection: "row",

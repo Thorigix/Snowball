@@ -41,6 +41,25 @@ Snowball now shows the escrow product surface beyond the happy path:
 - Transaction receipt: success screen shows amount, escrow PDA, buyer wallet, status, and explorer links when devnet addresses are available.
 - Seller reputation: NovaTech Istanbul and other sellers have verification, fulfilled-order count, dispute rate, and delivery SLA badges.
 
+## P2 Submission Story
+
+The app opens with a screenshot-friendly thesis without turning Snowball into a landing page: "Group buys protected by Solana escrow."
+
+Local impact angle:
+
+- Student hardware clubs can coordinate GPU, dev kit, and lab equipment buys without one person custodying everyone funds.
+- Book/course groups can pool deposits for bulk orders with delivery confirmation and refund paths.
+- Global hub and student trip organizers can collect deposits while seller release stays rule-based and auditable.
+
+The recommended 90-second demo order is:
+
+1. Guided Demo Mode.
+2. Seller Dashboard.
+3. Transaction Receipt proof.
+4. State-aware AI Risk Report.
+5. Dispute / Refund demo flow.
+6. Submission and grant proof page.
+
 ## Person A Scope
 
 - Solana Anchor escrow program

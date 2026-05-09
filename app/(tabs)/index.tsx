@@ -67,6 +67,11 @@ export default function CampaignFeedScreen() {
     (a, c) => a + parseFloat(c.totalDeposited),
     0
   );
+  const primaryCampaign = campaigns.find((c) => c.id === "campaign-rtx-5080-demo") ?? campaigns[0];
+  const liveProofText = primaryCampaign
+    ? `${primaryCampaign.currentParticipants}/${primaryCampaign.targetParticipants} buyers funded · ${primaryCampaign.totalDeposited} ${primaryCampaign.tokenSymbol} locked`
+    : "Live escrow proof loading";
+  const heroCompact = width < 380;
 
   const CARD_ICONS: Record<string, string> = {
     "campaign-rtx-5080-demo": "hardware-chip-outline",
@@ -103,6 +108,30 @@ export default function CampaignFeedScreen() {
               {resetting ? "Resetting..." : "Restart Demo"}
             </Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={s.submissionHero}>
+          <View style={s.heroTopRow}>
+            <View style={s.heroCopy}>
+              <Text style={s.heroKicker}>Submission screenshot mode</Text>
+              <Text style={[s.heroTitle, heroCompact && s.heroTitleCompact]}>
+                Group buys protected by Solana escrow.
+              </Text>
+              <Text style={s.heroSubtitle}>
+                Student clubs can coordinate hardware, book, and trip buys safely while AI explains trust and risk in plain language.
+              </Text>
+            </View>
+            <View style={s.heroProofIcon}>
+              <Ionicons name="shield-checkmark-outline" size={28} color={Brand.primary} />
+            </View>
+          </View>
+          <View style={s.heroProofRow}>
+            <View style={s.heroProofPill}>
+              <Ionicons name="radio-button-on-outline" size={12} color={Brand.success} />
+              <Text style={s.heroProofText}>Live devnet proof</Text>
+            </View>
+            <Text style={s.heroProofMetric}>{liveProofText}</Text>
+          </View>
         </View>
 
         {/* Balance Card */}
@@ -319,6 +348,83 @@ const s = StyleSheet.create({
     fontSize: 12,
     color: Brand.primary,
     fontWeight: "600",
+  },
+  submissionHero: {
+    backgroundColor: Dark.bgCard,
+    borderColor: `${Brand.primary}30`,
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xxl,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  heroCopy: { flex: 1 },
+  heroKicker: {
+    color: Brand.primary,
+    fontSize: Typography.tiny,
+    fontWeight: Typography.bold,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: 7,
+  },
+  heroTitle: {
+    color: Dark.text,
+    fontSize: 26,
+    fontWeight: Typography.bold,
+    lineHeight: 31,
+    marginBottom: Spacing.sm,
+  },
+  heroTitleCompact: {
+    fontSize: 23,
+    lineHeight: 28,
+  },
+  heroSubtitle: {
+    color: Dark.textSecondary,
+    fontSize: Typography.caption,
+    lineHeight: 18,
+  },
+  heroProofIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: Radius.md,
+    backgroundColor: `${Brand.primary}14`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroProofRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Dark.border,
+    paddingTop: Spacing.md,
+  },
+  heroProofPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: `${Brand.success}12`,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 5,
+  },
+  heroProofText: {
+    color: Brand.success,
+    fontSize: Typography.tiny,
+    fontWeight: Typography.semiBold,
+  },
+  heroProofMetric: {
+    color: Dark.textSecondary,
+    fontSize: Typography.caption,
+    fontWeight: Typography.medium,
   },
 
   // Balance

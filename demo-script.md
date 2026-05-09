@@ -40,6 +40,55 @@ Before opening the app:
 8. **Demo Controls FAB → Mark Shipped → Confirm Delivery → Confirm Delivery → Release Funds** — each step is a real devnet TX from the backend provider keypair. Status badges update live: `FUNDED → SHIPPED → DELIVERY_REVIEW → RELEASED`.
 9. **Reset for next run** — Restart Demo on the home screen.
 
+## 90-Second Demo Video Script
+
+Target length: 90-120 seconds. Keep the first 20 seconds focused on problem plus live proof.
+
+### 0-20s — Problem + Live Proof
+
+"Snowball lets student clubs and small groups run group buys without trusting one organizer or seller with everyone money. This live campaign is an RTX 5080 group buy: 2 of 3 buyers already funded, 0.10 devnet SOL is locked, and seller release is controlled by a Solana escrow rule."
+
+Show:
+- Home screenshot hero: "Group buys protected by Solana escrow."
+- RTX campaign card with live buyers and locked amount.
+- Open Guided Demo Mode checklist.
+
+### 20-45s — Buyer Deposit + Receipt
+
+"A buyer joins, signs a deposit, and receives a receipt that explains what happened: amount, escrow PDA, buyer wallet, status, and Explorer proof."
+
+Show:
+- Wallet connected.
+- Join / Sign Deposit.
+- Success receipt proof card.
+
+### 45-65s — AI Trust Layer
+
+"The AI layer is not a chatbot wrapper. It reads campaign state and explains trust and risk in non-crypto language: seller cannot withdraw, one more deposit is needed, or confirmations are still missing."
+
+Show:
+- Campaign detail AI Risk Report.
+- State-aware sentence and risk rows.
+
+### 65-85s — Seller + Dispute Path
+
+"On the seller side, Snowball looks like a real marketplace operation dashboard: shipment status, escrow total, confirmations, release readiness, verified seller profile, and dispute/refund handling."
+
+Show:
+- Seller Dashboard.
+- Raise Dispute.
+- Seller release blocked.
+- Refund Buyer action.
+
+### 85-105s — Grant Close
+
+"The hackathon proof uses devnet SOL for speed. The production milestone is an SPL USDC vault interface, reusable escrow SDK/API, and student club pilots for hardware, books, and trip buys."
+
+Show:
+- Proof tab.
+- USDC vault interface stub.
+- Why Snowball Deserves Grant section.
+
 ## Notes
 
 This demo uses devnet SOL for speed. The production version can extend the escrow to SPL USDC vaults.
