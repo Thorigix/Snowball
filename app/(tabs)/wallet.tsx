@@ -3,122 +3,128 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-
-import { Dark, Brand, Typography, Spacing, Radius, Shadows } from "@/constants/theme";
+import { Dark, Brand, Spacing, Radius } from "@/constants/theme";
 
 export default function WalletScreen() {
   const [connected, setConnected] = useState(false);
-  const [walletAddress] = useState("7xKX...m9Qp");
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Wallet</Text>
-      </View>
+  const toggleConnect = () => setConnected((p) => !p);
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Wallet Card */}
-        <View style={styles.walletCard}>
-          <View style={styles.walletTop}>
-            <View style={styles.walletIcon}>
-              <Ionicons name="wallet" size={28} color={Brand.primary} />
+  if (!connected) {
+    return (
+      <SafeAreaView style={s.container} edges={["top"]}>
+        <ScrollView contentContainerStyle={s.scrollCenter} showsVerticalScrollIndicator={false}>
+          <View style={s.connectIcon}>
+            <Ionicons name="wallet-outline" size={48} color={Dark.textMuted} />
+          </View>
+          <Text style={s.connectTitle}>Connect Wallet</Text>
+          <Text style={s.connectDesc}>
+            Link your Solana wallet to deposit into escrow campaigns and track your group buys.
+          </Text>
+          <TouchableOpacity style={s.connectBtn} onPress={toggleConnect} activeOpacity={0.7}>
+            <Ionicons name="link-outline" size={18} color={Dark.bg} />
+            <Text style={s.connectBtnText}>Connect Wallet</Text>
+          </TouchableOpacity>
+
+          {/* Info Items */}
+          <View style={s.infoList}>
+            <View style={s.infoItem}>
+              <View style={[s.infoIcon, { backgroundColor: `${Brand.primary}12` }]}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={Brand.primary} />
+              </View>
+              <View style={s.infoContent}>
+                <Text style={s.infoTitle}>Escrow Protection</Text>
+                <Text style={s.infoDesc}>Funds locked until delivery is confirmed</Text>
+              </View>
             </View>
-            <View style={styles.networkBadge}>
-              <View style={styles.networkDot} />
-              <Text style={styles.networkText}>Devnet</Text>
+            <View style={s.infoItem}>
+              <View style={[s.infoIcon, { backgroundColor: `${Brand.secondary}12` }]}>
+                <Ionicons name="swap-horizontal-outline" size={18} color={Brand.secondary} />
+              </View>
+              <View style={s.infoContent}>
+                <Text style={s.infoTitle}>Cross-chain Funding</Text>
+                <Text style={s.infoDesc}>Bridge from any chain via LI.FI</Text>
+              </View>
             </View>
           </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
-          {connected ? (
-            <>
-              <Text style={styles.balanceLabel}>Available Balance</Text>
-              <Text style={styles.balance}>
-                0.245 <Text style={styles.balanceCurrency}>SOL</Text>
-              </Text>
-              <View style={styles.addressRow}>
-                <Text style={styles.addressLabel}>Address</Text>
-                <Text style={styles.address}>{walletAddress}</Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.connectTitle}>Connect Your Wallet</Text>
-              <Text style={styles.connectDesc}>
-                Connect a Solana wallet to deposit funds into escrow campaigns.
-              </Text>
-            </>
-          )}
-
-          <TouchableOpacity
-            style={[styles.connectButton, connected && styles.disconnectButton]}
-            onPress={() => setConnected(!connected)}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={connected ? "log-out-outline" : "link"}
-              size={18}
-              color={connected ? Brand.danger : Dark.textInverse}
-            />
-            <Text
-              style={[
-                styles.connectButtonText,
-                connected && styles.disconnectButtonText,
-              ]}
-            >
-              {connected ? "Disconnect" : "Connect Wallet"}
-            </Text>
+  // Connected State
+  return (
+    <SafeAreaView style={s.container} edges={["top"]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
+        {/* Header */}
+        <View style={s.header}>
+          <Text style={s.headerTitle}>Wallet</Text>
+          <TouchableOpacity onPress={toggleConnect}>
+            <Text style={s.disconnectText}>Disconnect</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Info Cards */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconWrap}>
-            <Ionicons name="shield-checkmark" size={20} color={Brand.primary} />
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Escrow Protection</Text>
-            <Text style={styles.infoDesc}>
-              Your funds are locked in a Solana escrow program. The seller cannot
-              withdraw until delivery is confirmed.
-            </Text>
-          </View>
+        {/* Balance */}
+        <View style={s.balanceSection}>
+          <Text style={s.balanceLabel}>Balance</Text>
+          <Text style={s.balanceValue}>
+            2.45 <Text style={s.balanceCurrency}>SOL</Text>
+          </Text>
+          <Text style={s.balanceUsd}>~ $342.30</Text>
         </View>
 
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconWrap}>
-            <Ionicons name="swap-horizontal" size={20} color={Brand.lifi} />
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Cross-chain Funding</Text>
-            <Text style={styles.infoDesc}>
-              Fund from any chain using LI.FI bridge. Your tokens are converted
-              to Solana SOL for the escrow deposit.
-            </Text>
-          </View>
+        {/* Network */}
+        <View style={s.networkRow}>
+          <View style={s.networkDot} />
+          <Text style={s.networkText}>Solana Devnet</Text>
         </View>
 
-        {/* Transaction History Placeholder */}
-        <View style={styles.historySection}>
-          <Text style={styles.historyTitle}>Recent Activity</Text>
-          {connected ? (
-            <View style={styles.emptyHistory}>
-              <Ionicons name="receipt-outline" size={32} color={Dark.textMuted} />
-              <Text style={styles.emptyText}>No transactions yet</Text>
-              <Text style={styles.emptySubtext}>
-                Join a campaign to make your first deposit
-              </Text>
+        {/* Actions */}
+        <View style={s.actionRow}>
+          {[
+            { icon: "arrow-down-outline", label: "Deposit" },
+            { icon: "arrow-up-outline", label: "Send" },
+            { icon: "swap-horizontal-outline", label: "Bridge" },
+            { icon: "time-outline", label: "History" },
+          ].map((a, i) => (
+            <TouchableOpacity key={i} style={s.actionItem}>
+              <View style={s.actionIconWrap}>
+                <Ionicons name={a.icon as any} size={20} color={Dark.text} />
+              </View>
+              <Text style={s.actionLabel}>{a.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Active Escrows */}
+        <Text style={s.sectionTitle}>Active Escrows</Text>
+        {[
+          { title: "RTX 5080 Group Buy", amount: "0.05", status: "Locked" },
+          { title: "AirPods Pro 3", amount: "0.03", status: "Locked" },
+        ].map((e, i) => (
+          <View key={i} style={s.escrowItem}>
+            <View style={s.escrowLeft}>
+              <View style={s.escrowDot} />
+              <View>
+                <Text style={s.escrowTitle}>{e.title}</Text>
+                <Text style={s.escrowStatus}>{e.status}</Text>
+              </View>
             </View>
-          ) : (
-            <View style={styles.emptyHistory}>
-              <Ionicons name="wallet-outline" size={32} color={Dark.textMuted} />
-              <Text style={styles.emptyText}>Connect wallet to view activity</Text>
-            </View>
-          )}
+            <Text style={s.escrowAmount}>{e.amount} SOL</Text>
+          </View>
+        ))}
+
+        {/* Wallet Address */}
+        <View style={s.addressCard}>
+          <Text style={s.addressLabel}>Wallet Address</Text>
+          <Text style={s.addressValue} numberOfLines={1}>
+            7xKQ...mF9d
+          </Text>
         </View>
 
         <View style={{ height: 100 }} />
@@ -127,207 +133,123 @@ export default function WalletScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Dark.bg,
-  },
-  header: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-  },
-  title: {
-    fontSize: Typography.h2,
-    fontWeight: Typography.bold,
-    color: Dark.text,
-  },
-  content: {
-    paddingHorizontal: Spacing.xl,
-  },
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Dark.bg },
+  scroll: { paddingHorizontal: 24, paddingTop: 8 },
+  scrollCenter: { flexGrow: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, paddingBottom: 60 },
 
-  // Wallet Card
-  walletCard: {
+  // Connect state
+  connectIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    borderWidth: 1,
-    borderColor: Dark.border,
-    marginBottom: Spacing.lg,
-    ...Shadows.elevated,
-  },
-  walletTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: Spacing.xl,
+    marginBottom: 24,
   },
-  walletIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: Radius.lg,
-    backgroundColor: "rgba(91, 181, 162, 0.1)",
+  connectTitle: { fontSize: 24, fontWeight: "700", color: Dark.text, marginBottom: 10 },
+  connectDesc: { fontSize: 14, color: Dark.textMuted, textAlign: "center", lineHeight: 20, marginBottom: 32 },
+  connectBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: Brand.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 48,
+  },
+  connectBtnText: { fontSize: 15, fontWeight: "600", color: Dark.bg },
+
+  infoList: { width: "100%", gap: 16 },
+  infoItem: { flexDirection: "row", alignItems: "center", gap: 14 },
+  infoIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },
-  networkBadge: {
+  infoContent: { flex: 1 },
+  infoTitle: { fontSize: 14, fontWeight: "600", color: Dark.text, marginBottom: 2 },
+  infoDesc: { fontSize: 12, color: Dark.textMuted },
+
+  // Connected header
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  headerTitle: { fontSize: 26, fontWeight: "700", color: Dark.text },
+  disconnectText: { fontSize: 13, color: Brand.danger, fontWeight: "500" },
+
+  // Balance
+  balanceSection: { marginBottom: 12 },
+  balanceLabel: { fontSize: 13, color: Dark.textMuted, marginBottom: 6 },
+  balanceValue: { fontSize: 42, fontWeight: "700", color: Dark.text, letterSpacing: -1.5 },
+  balanceCurrency: { fontSize: 20, fontWeight: "500", color: Dark.textSecondary },
+  balanceUsd: { fontSize: 14, color: Dark.textMuted, marginTop: 4 },
+
+  // Network
+  networkRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(168, 124, 219, 0.12)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
+    marginBottom: 32,
+    marginTop: 8,
   },
-  networkDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Brand.solana,
-  },
-  networkText: {
-    fontSize: Typography.caption,
-    color: Brand.solana,
-    fontWeight: Typography.semiBold,
-  },
+  networkDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Brand.success },
+  networkText: { fontSize: 12, color: Dark.textMuted },
 
-  // Connected
-  balanceLabel: {
-    fontSize: Typography.caption,
-    color: Dark.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: Spacing.xs,
+  // Actions
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 36,
   },
-  balance: {
-    fontSize: 36,
-    fontWeight: Typography.bold,
-    color: Dark.text,
-    marginBottom: Spacing.lg,
+  actionItem: { alignItems: "center", gap: 6 },
+  actionIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: Dark.bgCard,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  balanceCurrency: {
-    fontSize: Typography.h3,
-    color: Brand.primary,
-  },
-  addressRow: {
+  actionLabel: { fontSize: 11, color: Dark.textMuted, fontWeight: "500" },
+
+  // Section
+  sectionTitle: { fontSize: 17, fontWeight: "600", color: Dark.text, marginBottom: 16 },
+
+  // Escrow items
+  escrowItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: Dark.bgInput,
-    padding: Spacing.md,
-    borderRadius: Radius.md,
-    marginBottom: Spacing.lg,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Dark.border,
   },
-  addressLabel: {
-    fontSize: Typography.caption,
-    color: Dark.textMuted,
+  escrowLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  escrowDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Brand.warning,
   },
-  address: {
-    fontSize: Typography.bodySmall,
-    color: Dark.text,
-    fontFamily: "monospace",
-  },
+  escrowTitle: { fontSize: 14, fontWeight: "500", color: Dark.text },
+  escrowStatus: { fontSize: 11, color: Dark.textMuted, marginTop: 1 },
+  escrowAmount: { fontSize: 14, fontWeight: "600", color: Dark.text },
 
-  // Disconnected
-  connectTitle: {
-    fontSize: Typography.h3,
-    fontWeight: Typography.semiBold,
-    color: Dark.text,
-    marginBottom: Spacing.sm,
-  },
-  connectDesc: {
-    fontSize: Typography.bodySmall,
-    color: Dark.textSecondary,
-    lineHeight: 20,
-    marginBottom: Spacing.xl,
-  },
-
-  // Buttons
-  connectButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: Brand.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-  },
-  connectButtonText: {
-    fontSize: Typography.body,
-    fontWeight: Typography.semiBold,
-    color: Dark.textInverse,
-  },
-  disconnectButton: {
-    backgroundColor: "rgba(255, 77, 106, 0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 77, 106, 0.3)",
-  },
-  disconnectButtonText: {
-    color: Brand.danger,
-  },
-
-  // Info Cards
-  infoCard: {
-    flexDirection: "row",
+  // Address
+  addressCard: {
+    marginTop: 32,
     backgroundColor: Dark.bgCard,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Dark.border,
-    marginBottom: Spacing.md,
+    borderRadius: 14,
+    padding: 16,
   },
-  infoIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    backgroundColor: "rgba(91, 181, 162, 0.08)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: Spacing.md,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoTitle: {
-    fontSize: Typography.bodySmall,
-    fontWeight: Typography.semiBold,
-    color: Dark.text,
-    marginBottom: 4,
-  },
-  infoDesc: {
-    fontSize: Typography.caption,
-    color: Dark.textSecondary,
-    lineHeight: 18,
-  },
-
-  // History
-  historySection: {
-    marginTop: Spacing.lg,
-  },
-  historyTitle: {
-    fontSize: Typography.h4,
-    fontWeight: Typography.semiBold,
-    color: Dark.text,
-    marginBottom: Spacing.md,
-  },
-  emptyHistory: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Dark.bgCard,
-    borderRadius: Radius.lg,
-    padding: Spacing.xxxl,
-    borderWidth: 1,
-    borderColor: Dark.border,
-    borderStyle: "dashed",
-  },
-  emptyText: {
-    fontSize: Typography.bodySmall,
-    color: Dark.textSecondary,
-    marginTop: Spacing.md,
-  },
-  emptySubtext: {
-    fontSize: Typography.caption,
-    color: Dark.textMuted,
-    marginTop: 4,
-  },
+  addressLabel: { fontSize: 11, color: Dark.textMuted, marginBottom: 4 },
+  addressValue: { fontSize: 14, fontWeight: "500", color: Dark.textSecondary, fontFamily: "monospace" },
 });
