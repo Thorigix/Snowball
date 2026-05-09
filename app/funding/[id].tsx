@@ -7,6 +7,7 @@ import { Dark, Brand, Typography, Spacing, Radius } from "@/constants/theme";
 import { getLifiQuote } from "@/services/lifi";
 import { getLifiQuoteMock } from "@/services/mock-data";
 import { LifiRouteSummary } from "@/types";
+import { goBackOrHome } from "@/hooks/use-safe-back";
 
 const CHAINS = ["Base", "Ethereum", "Polygon", "Arbitrum", "Optimism"];
 const TOKENS = ["USDC", "USDT", "ETH", "WETH"];
@@ -54,7 +55,7 @@ export default function FundingScreen() {
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
       <View style={s.topBar}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={s.backBtn} onPress={() => goBackOrHome(router)}>
           <Ionicons name="chevron-back" size={22} color={Dark.text} />
         </TouchableOpacity>
         <Text style={s.topTitle}>Cross-chain Funding</Text>

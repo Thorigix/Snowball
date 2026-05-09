@@ -52,6 +52,11 @@ export type Campaign = {
   deliveryDeadline?: string;
   confirmationsCount: number;
   disputesCount: number;
+  userJoined?: boolean;
+  campaignPda?: string;
+  creator?: string;
+  seller?: string;
+  buyers?: string[];
 };
 
 export type Contribution = {

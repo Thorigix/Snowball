@@ -13,7 +13,7 @@ export const BACKEND_URL = __DEV__
 /** Solana */
 export const SOLANA_NETWORK = "devnet";
 export const SOLANA_RPC_URL = "https://api.devnet.solana.com";
-export const PROGRAM_ID = "PROGRAM_ID_PLACEHOLDER";
+export const PROGRAM_ID = "2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss";
 
 /** Explorer */
 export const EXPLORER_BASE_URL = "https://explorer.solana.com";

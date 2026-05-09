@@ -18,6 +18,10 @@ type BackendCampaign = {
   elevenLabsEnabled: boolean;
   confirmationsCount?: number;
   totalDepositedSol?: number;
+  campaignPda?: string;
+  creator?: string;
+  seller?: string;
+  buyers?: string[];
 };
 
 type LifiQuoteRequest = {
@@ -54,11 +58,15 @@ async function requestJson<T>(
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Backend ${path} failed with ${response.status}`);
+    const data = await response.json();
+
+    if (!response.ok || data?.error) {
+      throw new Error(
+        data?.error ?? `Backend ${path} failed with ${response.status}`
+      );
     }
 
-    return (await response.json()) as T;
+    return data as T;
   } finally {
     clearTimeout(timeout);
   }
@@ -92,6 +100,10 @@ export function mapBackendCampaign(campaign: BackendCampaign): Campaign {
     deliveryDeadline: "2026-05-17T23:59:00Z",
     confirmationsCount: campaign.confirmationsCount ?? 0,
     disputesCount: 0,
+    campaignPda: campaign.campaignPda,
+    creator: campaign.creator,
+    seller: campaign.seller,
+    buyers: campaign.buyers,
   };
 }
 
@@ -168,4 +180,20 @@ export async function fetchElevenLabsSummary(): Promise<string> {
   });
 
   return data.text ?? "Snowball escrow summary is unavailable.";
+}
+
+export async function fundConnectedWallet(address: string): Promise<string> {
+  const result = await requestJson<{ success: boolean; txHash: string; error?: string }>(
+    "/api/campaign/fund-wallet",
+    {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    }
+  );
+
+  if (!result.success) {
+    throw new Error(result.error ?? "Wallet funding failed");
+  }
+
+  return result.txHash;
 }

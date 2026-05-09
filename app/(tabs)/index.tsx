@@ -173,11 +173,18 @@ export default function CampaignFeedScreen() {
               <View style={s.cardFooter}>
                 <View style={s.footerChip}>
                   <Ionicons
-                    name="lock-closed-outline"
+                    name={campaign.userJoined ? "checkmark-circle-outline" : "lock-closed-outline"}
                     size={10}
-                    color={Dark.textMuted}
+                    color={campaign.userJoined ? Brand.success : Dark.textMuted}
                   />
-                  <Text style={s.footerChipText}>Escrow</Text>
+                  <Text
+                    style={[
+                      s.footerChipText,
+                      campaign.userJoined && s.footerChipTextJoined,
+                    ]}
+                  >
+                    {campaign.userJoined ? "Joined" : "Escrow"}
+                  </Text>
                 </View>
                 <Text style={s.footerTime}>{getTimeLeft(campaign.deadline)}</Text>
               </View>
@@ -328,5 +335,6 @@ const s = StyleSheet.create({
     gap: 4,
   },
   footerChipText: { fontSize: 10, color: Dark.textMuted },
+  footerChipTextJoined: { color: Brand.success, fontWeight: "600" },
   footerTime: { fontSize: 11, color: Dark.textMuted },
 });

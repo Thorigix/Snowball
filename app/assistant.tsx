@@ -1,5 +1,6 @@
 import React from "react";
 import { useRouter } from "expo-router";
+import { goBackOrHome } from "@/hooks/use-safe-back";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,7 +12,7 @@ export default function AssistantScreen() {
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
       <View style={s.topBar}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={s.backBtn} onPress={() => goBackOrHome(router)}>
           <Ionicons name="chevron-back" size={22} color={Dark.text} />
         </TouchableOpacity>
         <Text style={s.topTitle}>AI Assistant</Text>

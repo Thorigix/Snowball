@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius, Shadows, StatusColors } from "@/constants/theme";
 import { useCampaign } from "@/hooks/use-mock-store";
 import DemoControls from "@/components/DemoControls";
+import { goBackOrHome } from "@/hooks/use-safe-back";
 
 export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +29,7 @@ export default function CampaignDetailScreen() {
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
       <View style={s.topBar}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={s.backBtn} onPress={() => goBackOrHome(router)}>
           <Ionicons name="chevron-back" size={22} color={Dark.text} />
         </TouchableOpacity>
         <Text style={s.topTitle}>Campaign Details</Text>
@@ -43,8 +44,15 @@ export default function CampaignDetailScreen() {
           </View>
           <View style={s.heroTitleRow}>
             <Text style={s.heroTitle}>{campaign.title}</Text>
-            <View style={[s.badge, { backgroundColor: sc.bg }]}>
-              <Text style={[s.badgeText, { color: sc.text }]}>{campaign.status}</Text>
+            <View style={s.badgeStack}>
+              {campaign.userJoined ? (
+                <View style={[s.badge, s.joinedBadge]}>
+                  <Text style={[s.badgeText, s.joinedBadgeText]}>JOINED</Text>
+                </View>
+              ) : null}
+              <View style={[s.badge, { backgroundColor: sc.bg }]}>
+                <Text style={[s.badgeText, { color: sc.text }]}>{campaign.status}</Text>
+              </View>
             </View>
           </View>
           <View style={s.sellerRow}>
@@ -93,14 +101,32 @@ export default function CampaignDetailScreen() {
         <View style={s.actions}>
           {campaign.status === "OPEN" && (
             <>
-              <TouchableOpacity style={s.primaryBtn} onPress={() => router.push(`/join/${campaign.id}`)} activeOpacity={0.85}>
-                <Ionicons name="flash" size={20} color={Dark.textInverse} />
-                <Text style={s.primaryBtnText}>Join Campaign</Text>
+              <TouchableOpacity
+                style={[s.primaryBtn, campaign.userJoined && s.primaryBtnDisabled]}
+                onPress={() => router.push(`/join/${campaign.id}`)}
+                activeOpacity={0.85}
+                disabled={campaign.userJoined}
+              >
+                <Ionicons
+                  name={campaign.userJoined ? "checkmark-circle" : "flash"}
+                  size={20}
+                  color={campaign.userJoined ? Brand.success : Dark.textInverse}
+                />
+                <Text
+                  style={[
+                    s.primaryBtnText,
+                    campaign.userJoined && s.primaryBtnTextDisabled,
+                  ]}
+                >
+                  {campaign.userJoined ? "Already Joined" : "Join Campaign"}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push(`/funding/${campaign.id}`)} activeOpacity={0.85}>
-                <Ionicons name="swap-horizontal" size={20} color={Brand.lifi} />
-                <Text style={s.secondaryBtnText}>Fund from Another Chain</Text>
-              </TouchableOpacity>
+              {!campaign.userJoined ? (
+                <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push(`/funding/${campaign.id}`)} activeOpacity={0.85}>
+                  <Ionicons name="swap-horizontal" size={20} color={Brand.lifi} />
+                  <Text style={s.secondaryBtnText}>Fund from Another Chain</Text>
+                </TouchableOpacity>
+              ) : null}
             </>
           )}
           {(campaign.status === "SHIPPED" || campaign.status === "DELIVERY_REVIEW") && (
@@ -133,8 +159,11 @@ const s = StyleSheet.create({
   heroImg: { width: "100%", height: 120, borderRadius: Radius.lg, backgroundColor: "rgba(91, 181, 162,0.06)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.lg },
   heroTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: Spacing.sm },
   heroTitle: { fontSize: Typography.h2, fontWeight: Typography.bold, color: Dark.text, flex: 1, marginRight: Spacing.md },
+  badgeStack: { alignItems: "flex-end", gap: Spacing.xs },
   badge: { paddingHorizontal: Spacing.sm, paddingVertical: 4, borderRadius: Radius.sm },
   badgeText: { fontSize: Typography.tiny, fontWeight: Typography.semiBold, textTransform: "uppercase", letterSpacing: 0.5 },
+  joinedBadge: { backgroundColor: "rgba(91, 181, 162,0.15)" },
+  joinedBadgeText: { color: Brand.success },
   sellerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   sellerName: { fontSize: Typography.bodySmall, color: Dark.textSecondary },
   desc: { fontSize: Typography.bodySmall, color: Dark.textSecondary, lineHeight: 22, marginBottom: Spacing.lg },
@@ -155,7 +184,9 @@ const s = StyleSheet.create({
   trustDesc: { fontSize: Typography.caption, color: Dark.textSecondary, textAlign: "center", lineHeight: 18 },
   actions: { gap: Spacing.md },
   primaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md },
+  primaryBtnDisabled: { backgroundColor: Dark.bgCard, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.25)" },
   primaryBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },
+  primaryBtnTextDisabled: { color: Brand.success },
   secondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: "rgba(155, 127, 204,0.1)", paddingVertical: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: "rgba(155, 127, 204,0.25)" },
   secondaryBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Brand.lifi },
   aiBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Dark.bgCard, paddingVertical: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: Dark.border },

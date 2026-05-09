@@ -88,10 +88,60 @@ const initialFundedCampaign: Campaign = {
   disputesCount: 0,
 };
 
+const initialPowerBankCampaign: Campaign = {
+  id: "campaign-powerbank-demo",
+  title: "Power Bank Mini Drop",
+  description:
+    "Low-cost demo campaign for compact power banks. " +
+    "Buyers can test the Snowball escrow flow with a tiny devnet SOL deposit.",
+  imageUrl: undefined,
+  creatorWallet: "CREATOR_WALLET_PLACEHOLDER",
+  sellerWallet: "SELLER_WALLET_PLACEHOLDER_4",
+  sellerName: "ChargeHub Kadikoy",
+  targetParticipants: 2,
+  currentParticipants: 1,
+  pricePerUser: "0.01",
+  totalRequiredAmount: "0.02",
+  totalDeposited: "0.01",
+  tokenSymbol: "SOL",
+  tokenMint: "SOL_NATIVE",
+  status: "OPEN",
+  deadline: "2026-05-16T23:59:00Z",
+  deliveryDeadline: "2026-05-21T23:59:00Z",
+  confirmationsCount: 0,
+  disputesCount: 0,
+};
+
+const initialStickerPackCampaign: Campaign = {
+  id: "campaign-sticker-pack-demo",
+  title: "Dev Sticker Pack",
+  description:
+    "Tiny demo group buy for Snowball stickers. " +
+    "Designed for showing campaign discovery without draining the demo wallet.",
+  imageUrl: undefined,
+  creatorWallet: "CREATOR_WALLET_PLACEHOLDER",
+  sellerWallet: "SELLER_WALLET_PLACEHOLDER_5",
+  sellerName: "HackLab Merch",
+  targetParticipants: 2,
+  currentParticipants: 0,
+  pricePerUser: "0.005",
+  totalRequiredAmount: "0.01",
+  totalDeposited: "0",
+  tokenSymbol: "SOL",
+  tokenMint: "SOL_NATIVE",
+  status: "OPEN",
+  deadline: "2026-05-18T23:59:00Z",
+  deliveryDeadline: "2026-05-23T23:59:00Z",
+  confirmationsCount: 0,
+  disputesCount: 0,
+};
+
 const INITIAL_CAMPAIGNS: Campaign[] = [
   initialDemoCampaign,
   initialSecondCampaign,
   initialFundedCampaign,
+  initialPowerBankCampaign,
+  initialStickerPackCampaign,
 ];
 
 const INITIAL_CONTRIBUTIONS: Contribution[] = [
@@ -140,9 +190,10 @@ function notify() {
 function upsertCampaign(campaign: Campaign): void {
   const existingIndex = allCampaigns.findIndex((c) => c.id === campaign.id);
   if (existingIndex >= 0) {
-    Object.assign(allCampaigns[existingIndex], campaign);
+    const userJoined = campaign.userJoined ?? allCampaigns[existingIndex].userJoined;
+    Object.assign(allCampaigns[existingIndex], campaign, { userJoined });
   } else {
-    allCampaigns.unshift(campaign);
+    allCampaigns.unshift({ ...campaign, userJoined: campaign.userJoined ?? false });
   }
 }
 
@@ -165,11 +216,58 @@ function confirmationThreshold(target: number): number {
 
 function fakeTxHash(prefix: string): string {
   return (
-    "5mock" +
-    Math.random().toString(36).substring(2, 10) +
+    "demo-" +
     prefix +
-    Math.random().toString(36).substring(2, 6)
+    "-" +
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).substring(2, 8)
   );
+}
+
+async function joinLocalCampaign(campaignId: string): Promise<MutationResult> {
+  await new Promise((r) => setTimeout(r, 700));
+  const c = findCampaign(campaignId);
+  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
+  if (c.userJoined) {
+    return { success: false, txHash: "", error: "You already joined this campaign" };
+  }
+  if (c.status !== "OPEN") {
+    return { success: false, txHash: "", error: "Campaign is not open" };
+  }
+  if (c.currentParticipants >= c.targetParticipants) {
+    return { success: false, txHash: "", error: "Campaign is full" };
+  }
+
+  c.currentParticipants += 1;
+  const precision = Math.max(2, c.pricePerUser.split(".")[1]?.length ?? 2);
+  c.totalDeposited = (
+    parseFloat(c.totalDeposited) + parseFloat(c.pricePerUser)
+  ).toFixed(precision);
+
+  demoContributions.push({
+    campaignId: c.id,
+    buyerWallet: "CURRENT_DEMO_USER",
+    amount: c.pricePerUser,
+    hasConfirmedDelivery: false,
+    hasRaisedDispute: false,
+    refunded: false,
+  });
+
+  if (c.currentParticipants >= c.targetParticipants) {
+    c.status = "FUNDED";
+  }
+
+  c.userJoined = true;
+  notify();
+  return { success: true, txHash: fakeTxHash("join") };
+}
+
+export function markCampaignJoined(campaignId: string): void {
+  const campaign = findCampaign(campaignId);
+  if (!campaign) return;
+  campaign.userJoined = true;
+  notify();
 }
 
 // ─── Read APIs (kept stable for existing screens) ───────────────────
@@ -257,51 +355,35 @@ export type MutationResult = {
 export async function mockJoinCampaign(
   campaignId: string
 ): Promise<MutationResult> {
+  const campaign = findCampaign(campaignId);
+  if (campaign?.userJoined) {
+    return { success: false, txHash: "", error: "You already joined this campaign" };
+  }
+  if (campaign && campaign.id !== "campaign-rtx-5080-demo" && !campaign.campaignPda) {
+    return joinLocalCampaign(campaignId);
+  }
+
   try {
     const result = await mutateBackendCampaign("join");
     applyBackendCampaign(result.campaign);
+    markCampaignJoined(result.campaign.id);
     return {
       success: result.success,
       txHash: result.txHash,
       error: result.error,
     };
   } catch (error) {
-    console.warn("[Backend] Join failed, using local demo mutation", error);
+    console.error("[Backend] Join failed", error);
+    return {
+      success: false,
+      txHash: "",
+      error: error instanceof Error ? error.message : "Devnet join failed",
+    };
   }
-
-  await new Promise((r) => setTimeout(r, 1000));
-  const c = findCampaign(campaignId);
-  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
-  if (c.status !== "OPEN")
-    return { success: false, txHash: "", error: "Campaign is not open" };
-  if (c.currentParticipants >= c.targetParticipants)
-    return { success: false, txHash: "", error: "Campaign is full" };
-
-  c.currentParticipants += 1;
-  const price = parseFloat(c.pricePerUser);
-  c.totalDeposited = (parseFloat(c.totalDeposited) + price).toFixed(
-    Math.max(2, c.pricePerUser.split(".")[1]?.length ?? 2)
-  );
-
-  demoContributions.push({
-    campaignId: c.id,
-    buyerWallet: `BUYER_${demoContributions.length + 1}_PLACEHOLDER`,
-    amount: c.pricePerUser,
-    hasConfirmedDelivery: false,
-    hasRaisedDispute: false,
-    refunded: false,
-  });
-
-  if (c.currentParticipants >= c.targetParticipants) {
-    c.status = "FUNDED";
-  }
-
-  notify();
-  return { success: true, txHash: fakeTxHash("join") };
 }
 
 export async function mockMarkShipped(
-  campaignId: string
+  _campaignId: string
 ): Promise<MutationResult> {
   try {
     const result = await mutateBackendCampaign("mark-shipped");
@@ -312,22 +394,17 @@ export async function mockMarkShipped(
       error: result.error,
     };
   } catch (error) {
-    console.warn("[Backend] Mark shipped failed, using local demo mutation", error);
+    console.error("[Backend] Mark shipped failed", error);
+    return {
+      success: false,
+      txHash: "",
+      error: error instanceof Error ? error.message : "Devnet mark shipped failed",
+    };
   }
-
-  await new Promise((r) => setTimeout(r, 600));
-  const c = findCampaign(campaignId);
-  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
-  if (c.status !== "FUNDED")
-    return { success: false, txHash: "", error: "Campaign is not funded" };
-
-  c.status = "SHIPPED";
-  notify();
-  return { success: true, txHash: fakeTxHash("ship") };
 }
 
 export async function mockConfirmDelivery(
-  campaignId: string
+  _campaignId: string
 ): Promise<MutationResult> {
   try {
     const result = await mutateBackendCampaign("confirm-delivery");
@@ -338,34 +415,18 @@ export async function mockConfirmDelivery(
       error: result.error,
     };
   } catch (error) {
-    console.warn("[Backend] Confirm delivery failed, using local demo mutation", error);
-  }
-
-  await new Promise((r) => setTimeout(r, 800));
-  const c = findCampaign(campaignId);
-  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
-  if (c.status !== "SHIPPED" && c.status !== "DELIVERY_REVIEW")
+    console.error("[Backend] Confirm delivery failed", error);
     return {
       success: false,
       txHash: "",
-      error: "Campaign is not awaiting delivery confirmation",
+      error:
+        error instanceof Error ? error.message : "Devnet delivery confirmation failed",
     };
-
-  c.confirmationsCount += 1;
-  if (c.status === "SHIPPED") c.status = "DELIVERY_REVIEW";
-
-  // Mark a contribution as confirmed (first unconfirmed for this campaign).
-  const contrib = demoContributions.find(
-    (x) => x.campaignId === c.id && !x.hasConfirmedDelivery
-  );
-  if (contrib) contrib.hasConfirmedDelivery = true;
-
-  notify();
-  return { success: true, txHash: fakeTxHash("confirm") };
+  }
 }
 
 export async function mockReleaseFunds(
-  campaignId: string
+  _campaignId: string
 ): Promise<MutationResult> {
   try {
     const result = await mutateBackendCampaign("release");
@@ -376,51 +437,38 @@ export async function mockReleaseFunds(
       error: result.error,
     };
   } catch (error) {
-    console.warn("[Backend] Release failed, using local demo mutation", error);
+    console.error("[Backend] Release failed", error);
+    return {
+      success: false,
+      txHash: "",
+      error: error instanceof Error ? error.message : "Devnet release failed",
+    };
   }
-
-  await new Promise((r) => setTimeout(r, 700));
-  const c = findCampaign(campaignId);
-  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
-  if (c.status !== "DELIVERY_REVIEW" && c.status !== "SHIPPED")
-    return {
-      success: false,
-      txHash: "",
-      error: "Campaign is not in a releasable state",
-    };
-  if (c.confirmationsCount < confirmationThreshold(c.targetParticipants))
-    return {
-      success: false,
-      txHash: "",
-      error: `Need at least ${confirmationThreshold(
-        c.targetParticipants
-      )} confirmations`,
-    };
-  if (c.disputesCount > 0)
-    return { success: false, txHash: "", error: "Active dispute blocks release" };
-
-  c.status = "RELEASED";
-  notify();
-  return { success: true, txHash: fakeTxHash("release") };
 }
 
 export function resetDemoState(): void {
   mutateBackendCampaign("reset")
-    .then((result) => applyBackendCampaign(result.campaign))
+    .then((result) => {
+      INITIAL_CAMPAIGNS.forEach((seed, i) => {
+        if (allCampaigns[i]) Object.assign(allCampaigns[i], { ...seed, userJoined: false });
+        else allCampaigns[i] = { ...seed, userJoined: false };
+      });
+      allCampaigns.length = INITIAL_CAMPAIGNS.length;
+      demoContributions.length = 0;
+      INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
+      applyBackendCampaign({ ...result.campaign, userJoined: false });
+    })
     .catch((error) => {
-      console.warn("[Backend] Reset failed, using local reset", error);
+      console.error("[Backend] Reset failed", error);
+      INITIAL_CAMPAIGNS.forEach((seed, i) => {
+        if (allCampaigns[i]) Object.assign(allCampaigns[i], { ...seed, userJoined: false });
+        else allCampaigns[i] = { ...seed, userJoined: false };
+      });
+      allCampaigns.length = INITIAL_CAMPAIGNS.length;
+      demoContributions.length = 0;
+      INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
+      notify();
     });
-
-  // Mutate each campaign in place so existing references stay valid.
-  INITIAL_CAMPAIGNS.forEach((seed, i) => {
-    if (allCampaigns[i]) Object.assign(allCampaigns[i], seed);
-    else allCampaigns[i] = { ...seed };
-  });
-  allCampaigns.length = INITIAL_CAMPAIGNS.length;
-
-  demoContributions.length = 0;
-  INITIAL_CONTRIBUTIONS.forEach((c) => demoContributions.push({ ...c }));
-  notify();
 }
 
 export function getConfirmationThreshold(target: number): number {

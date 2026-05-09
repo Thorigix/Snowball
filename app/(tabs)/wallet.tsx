@@ -5,17 +5,50 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Spacing, Radius } from "@/constants/theme";
+import {
+  connectWallet,
+  disconnectWallet,
+} from "@/services/wallet";
+import { useWallet } from "@/hooks/use-wallet";
 
 export default function WalletScreen() {
-  const [connected, setConnected] = useState(false);
+  const wallet = useWallet();
+  const [busy, setBusy] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
-  const toggleConnect = () => setConnected((p) => !p);
+  const handleConnect = async () => {
+    setBusy(true);
+    setErrorText("");
+    try {
+      await connectWallet();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not connect wallet";
+      setErrorText(message);
+      Alert.alert(
+        "Wallet connection failed",
+        message
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  if (!connected) {
+  const handleDisconnect = async () => {
+    setBusy(true);
+    try {
+      await disconnectWallet();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!wallet.connected) {
     return (
       <SafeAreaView style={s.container} edges={["top"]}>
         <ScrollView contentContainerStyle={s.scrollCenter} showsVerticalScrollIndicator={false}>
@@ -26,10 +59,16 @@ export default function WalletScreen() {
           <Text style={s.connectDesc}>
             Link your Solana wallet to deposit into escrow campaigns and track your group buys.
           </Text>
-          <TouchableOpacity style={s.connectBtn} onPress={toggleConnect} activeOpacity={0.7}>
+          <TouchableOpacity style={s.connectBtn} onPress={handleConnect} activeOpacity={0.7} disabled={busy}>
             <Ionicons name="link-outline" size={18} color={Dark.bg} />
-            <Text style={s.connectBtnText}>Connect Wallet</Text>
+            <Text style={s.connectBtnText}>{busy ? "Connecting..." : "Connect Wallet"}</Text>
           </TouchableOpacity>
+          {errorText ? (
+            <View style={s.errorBox}>
+              <Ionicons name="alert-circle-outline" size={16} color={Brand.danger} />
+              <Text style={s.errorText}>{errorText}</Text>
+            </View>
+          ) : null}
 
           {/* Info Items */}
           <View style={s.infoList}>
@@ -64,7 +103,7 @@ export default function WalletScreen() {
         {/* Header */}
         <View style={s.header}>
           <Text style={s.headerTitle}>Wallet</Text>
-          <TouchableOpacity onPress={toggleConnect}>
+          <TouchableOpacity onPress={handleDisconnect} disabled={busy}>
             <Text style={s.disconnectText}>Disconnect</Text>
           </TouchableOpacity>
         </View>
@@ -73,9 +112,10 @@ export default function WalletScreen() {
         <View style={s.balanceSection}>
           <Text style={s.balanceLabel}>Balance</Text>
           <Text style={s.balanceValue}>
-            2.45 <Text style={s.balanceCurrency}>SOL</Text>
+            {wallet.balanceSol == null ? "--" : wallet.balanceSol.toFixed(4)}{" "}
+            <Text style={s.balanceCurrency}>SOL</Text>
           </Text>
-          <Text style={s.balanceUsd}>~ $342.30</Text>
+          <Text style={s.balanceUsd}>{wallet.providerName}</Text>
         </View>
 
         {/* Network */}
@@ -123,7 +163,7 @@ export default function WalletScreen() {
         <View style={s.addressCard}>
           <Text style={s.addressLabel}>Wallet Address</Text>
           <Text style={s.addressValue} numberOfLines={1}>
-            7xKQ...mF9d
+            {wallet.address}
           </Text>
         </View>
 
@@ -161,6 +201,20 @@ const s = StyleSheet.create({
     marginBottom: 48,
   },
   connectBtnText: { fontSize: 15, fontWeight: "600", color: Dark.bg },
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    width: "100%",
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.25)",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: -32,
+    marginBottom: 32,
+  },
+  errorText: { flex: 1, fontSize: 12, color: Brand.danger, lineHeight: 17 },
 
   infoList: { width: "100%", gap: 16 },
   infoItem: { flexDirection: "row", alignItems: "center", gap: 14 },
@@ -202,7 +256,6 @@ const s = StyleSheet.create({
   },
   networkDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Brand.success },
   networkText: { fontSize: 12, color: Dark.textMuted },
-
   // Actions
   actionRow: {
     flexDirection: "row",
