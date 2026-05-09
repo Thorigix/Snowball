@@ -1,8 +1,8 @@
 /**
  * ElevenLabs Voice Agent — Campaign Summarizer
- * 
+ *
  * Bağlanınca hemen kampanyaları sesli özetler.
- * WebSocket API kullanır (web + React Native).
+ * WebSocket API — works on both web and React Native.
  */
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
@@ -20,14 +20,15 @@ import { ELEVENLABS_AGENT_ID } from "@/constants/config";
 import { allCampaigns } from "@/services/mock-data";
 import type { Campaign } from "@/types";
 
-type AgentStatus = "disconnected" | "connecting" | "connected" | "speaking";
+// Fallback if env var is empty
+const AGENT_ID =
+  ELEVENLABS_AGENT_ID || "agent_5901kr50rz2ef1zv27zs7291e3e0";
+
+type AgentStatus = "disconnected" | "connecting" | "connected" | "speaking" | "error";
 
 type Props = {
-  /** Belirli bir kampanyayı özetle (Campaign Detail'den gelince) */
   focusCampaign?: Campaign;
-  /** Transcript callback — chat UI'a mesaj aktarır */
   onTranscript?: (role: "user" | "agent", text: string) => void;
-  /** Status callback */
   onStatusChange?: (status: AgentStatus) => void;
 };
 
@@ -37,12 +38,14 @@ export default function ElevenLabsAgent({
   onStatusChange,
 }: Props) {
   const [status, setStatus] = useState<AgentStatus>("disconnected");
+  const [errorMsg, setErrorMsg] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const audioQueueRef = useRef<string[]>([]);
   const isPlayingRef = useRef(false);
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Pulse animation when speaking
+  // Pulse animation
   useEffect(() => {
     if (status === "speaking") {
       Animated.loop(
@@ -74,199 +77,236 @@ export default function ElevenLabsAgent({
     [onStatusChange]
   );
 
-  /** Kampanya özetini agent'ın first_message'ı olarak oluştur */
-  const buildFirstMessage = (): string => {
-    if (focusCampaign) {
-      const c = focusCampaign;
-      const pct = Math.round(
-        (c.currentParticipants / c.targetParticipants) * 100
-      );
-      return (
-        `Let me tell you about this campaign. ` +
-        `"${c.title}" by ${c.sellerName}. ` +
-        `It's currently ${pct} percent funded with ${c.currentParticipants} out of ${c.targetParticipants} buyers. ` +
-        `Each buyer deposits ${c.pricePerUser} ${c.tokenSymbol}. ` +
-        `${c.description} ` +
-        `The campaign status is ${c.status}. ` +
-        `All funds are protected by Solana escrow until delivery is confirmed.`
-      );
-    }
-
-    // Tüm kampanyaları özetle
-    const summaries = allCampaigns.map((c) => {
-      const pct = Math.round(
-        (c.currentParticipants / c.targetParticipants) * 100
-      );
-      return `"${c.title}" by ${c.sellerName}, ${pct}% funded, ${c.pricePerUser} ${c.tokenSymbol} per buyer`;
-    });
-
+  /** Build context for a specific campaign */
+  const buildFocusContext = (c: Campaign): string => {
+    const pct = Math.round(
+      (c.currentParticipants / c.targetParticipants) * 100
+    );
     return (
-      `Welcome to Snowball! I'll summarize the active campaigns for you. ` +
-      `There are ${allCampaigns.length} campaigns right now. ` +
-      summaries.join(". ") +
-      `. All campaigns use Solana escrow for buyer protection. Would you like to know more about any of these?`
+      `The user is looking at campaign "${c.title}" by ${c.sellerName}. ` +
+      `It is ${pct}% funded with ${c.currentParticipants} out of ${c.targetParticipants} buyers. ` +
+      `Each buyer deposits ${c.pricePerUser} ${c.tokenSymbol}. ` +
+      `Total required: ${c.totalRequiredAmount} ${c.tokenSymbol}, deposited so far: ${c.totalDeposited} ${c.tokenSymbol}. ` +
+      `Status: ${c.status}. Description: ${c.description}. ` +
+      `All funds are protected by Solana escrow — seller cannot withdraw until majority confirms delivery.`
     );
   };
 
-  /** Agent prompt — kampanya bilgilerini içerir */
-  const buildPrompt = (): string => {
-    const campaignDetails = allCampaigns
+  /** Build context for all campaigns */
+  const buildAllCampaignsContext = (): string => {
+    const details = allCampaigns
       .map(
         (c) =>
-          `- "${c.title}" by ${c.sellerName}: ` +
+          `"${c.title}" by ${c.sellerName}: ` +
           `${c.currentParticipants}/${c.targetParticipants} buyers, ` +
-          `${c.pricePerUser} ${c.tokenSymbol}/buyer, ` +
-          `total ${c.totalRequiredAmount} ${c.tokenSymbol}, ` +
-          `deposited ${c.totalDeposited} ${c.tokenSymbol}, ` +
-          `status: ${c.status}. ` +
-          c.description
+          `${c.pricePerUser} ${c.tokenSymbol}/buyer, status ${c.status}`
       )
-      .join("\n");
+      .join(". ");
 
     return (
-      "You are Snowball AI, a voice assistant for the Snowball group buying platform on Solana blockchain. " +
-      "Your role is to summarize campaigns, explain escrow protection, and help users understand group buys.\n\n" +
-      "Key facts:\n" +
-      "- Snowball uses Solana escrow programs to protect buyer funds\n" +
-      "- Sellers cannot withdraw until majority of buyers confirm delivery\n" +
-      "- LI.FI enables cross-chain funding from Ethereum, Base, Polygon, Arbitrum, Optimism\n" +
-      "- If delivery fails, buyers get automatic refund\n\n" +
-      "Active campaigns:\n" +
-      campaignDetails +
-      "\n\nSpeak naturally and concisely. Summarize campaigns when asked. " +
-      "Warn about risks when relevant. Be helpful and reassuring about escrow protection."
+      `Snowball is a group buying platform on Solana. There are ${allCampaigns.length} active campaigns: ${details}. ` +
+      `All campaigns use Solana escrow for buyer protection. LI.FI enables cross-chain funding.`
     );
   };
 
   const connect = useCallback(async () => {
     if (wsRef.current) return;
     updateStatus("connecting");
+    setErrorMsg("");
 
-    const url = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVENLABS_AGENT_ID}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    console.log("[ElevenLabs] Connecting with agent:", AGENT_ID);
 
-    ws.onopen = () => {
-      // Kampanya context + first_message ile başlat
-      ws.send(
-        JSON.stringify({
+    const url = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}`;
+
+    try {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log("[ElevenLabs] WebSocket opened, sending init...");
+
+        // Send client init — no first_message override (agent config blocks it)
+        const initData = {
           type: "conversation_initiation_client_data",
-          conversation_config_override: {
-            agent: {
-              prompt: {
-                prompt: buildPrompt(),
-              },
-              first_message: buildFirstMessage(),
-            },
-          },
-        })
-      );
-      updateStatus("connected");
-    };
+        };
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-        switch (data.type) {
-          case "agent_response":
-            if (data.agent_response_event?.agent_response) {
-              onTranscript?.(
-                "agent",
-                data.agent_response_event.agent_response
-              );
-              updateStatus("speaking");
-            }
-            break;
+        ws.send(JSON.stringify(initData));
+      };
 
-          case "user_transcript":
-            if (data.user_transcription_event?.user_transcript) {
-              onTranscript?.(
-                "user",
-                data.user_transcription_event.user_transcript
+      ws.onmessage = (event) => {
+        try {
+          const raw =
+            typeof event.data === "string"
+              ? event.data
+              : String(event.data);
+          const data = JSON.parse(raw);
+
+          console.log("[ElevenLabs] Message type:", data.type);
+
+          switch (data.type) {
+            case "conversation_initiation_metadata":
+              console.log(
+                "[ElevenLabs] Conversation started:",
+                data.conversation_initiation_metadata_event?.conversation_id
               );
               updateStatus("connected");
-            }
-            break;
 
-          case "audio":
-            if (data.audio_event?.audio_base_64) {
-              // Queue audio for sequential playback
-              audioQueueRef.current.push(data.audio_event.audio_base_64);
-              processAudioQueue();
-              updateStatus("speaking");
-            }
-            break;
+              // Send campaign data as context so agent can answer about them
+              if (ws.readyState === WebSocket.OPEN) {
+                const ctx = focusCampaign
+                  ? buildFocusContext(focusCampaign)
+                  : buildAllCampaignsContext();
+                ws.send(
+                  JSON.stringify({
+                    type: "contextual_update",
+                    text: ctx,
+                  })
+                );
+                console.log("[ElevenLabs] Campaign context sent");
+              }
+              break;
 
-          case "agent_response_correction":
-            if (data.agent_response_correction_event?.corrected_response) {
-              onTranscript?.(
-                "agent",
-                data.agent_response_correction_event.corrected_response
-              );
-            }
-            break;
+            case "agent_response":
+              if (data.agent_response_event?.agent_response) {
+                const text = data.agent_response_event.agent_response;
+                console.log("[ElevenLabs] Agent says:", text.slice(0, 60));
+                onTranscript?.("agent", text);
+                updateStatus("speaking");
+              }
+              break;
 
-          case "ping":
-            if (data.ping_event) {
-              setTimeout(() => {
-                if (ws.readyState === WebSocket.OPEN) {
-                  ws.send(
-                    JSON.stringify({
-                      type: "pong",
-                      event_id: data.ping_event.event_id,
-                    })
-                  );
-                }
-              }, data.ping_event.ping_ms || 0);
-            }
-            break;
+            case "user_transcript":
+              if (data.user_transcription_event?.user_transcript) {
+                const text = data.user_transcription_event.user_transcript;
+                console.log("[ElevenLabs] User said:", text.slice(0, 60));
+                onTranscript?.("user", text);
+                updateStatus("connected");
+              }
+              break;
 
-          case "conversation_initiation_metadata":
-            updateStatus("connected");
-            break;
+            case "audio":
+              if (data.audio_event?.audio_base_64) {
+                audioQueueRef.current.push(data.audio_event.audio_base_64);
+                processAudioQueue();
+                if (status !== "speaking") updateStatus("speaking");
+              }
+              break;
 
-          default:
-            break;
+            case "agent_response_correction":
+              if (
+                data.agent_response_correction_event?.corrected_response
+              ) {
+                onTranscript?.(
+                  "agent",
+                  data.agent_response_correction_event.corrected_response
+                );
+              }
+              break;
+
+            case "ping":
+              if (data.ping_event) {
+                const delay = data.ping_event.ping_ms || 0;
+                setTimeout(() => {
+                  if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(
+                      JSON.stringify({
+                        type: "pong",
+                        event_id: data.ping_event.event_id,
+                      })
+                    );
+                    console.log("[ElevenLabs] Pong sent");
+                  }
+                }, delay);
+              }
+              break;
+
+            case "interruption":
+              console.log("[ElevenLabs] Interruption event");
+              audioQueueRef.current = [];
+              break;
+
+            case "internal_vad_score":
+              // Voice activity detection — ignore
+              break;
+
+            case "internal_turn_probability":
+              // Turn probability — ignore
+              break;
+
+            default:
+              console.log("[ElevenLabs] Unhandled:", data.type);
+              break;
+          }
+        } catch (e) {
+          console.warn("[ElevenLabs] Parse error:", e);
         }
-      } catch {
-        // ignore
-      }
-    };
+      };
 
-    ws.onerror = () => {
-      updateStatus("disconnected");
-    };
+      ws.onerror = (err) => {
+        console.error("[ElevenLabs] WebSocket error:", err);
+        setErrorMsg("Connection error");
+        updateStatus("error");
+      };
 
-    ws.onclose = () => {
-      wsRef.current = null;
-      audioQueueRef.current = [];
-      isPlayingRef.current = false;
-      updateStatus("disconnected");
-    };
+      ws.onclose = (event) => {
+        console.log(
+          "[ElevenLabs] WebSocket closed:",
+          event.code,
+          event.reason
+        );
+        wsRef.current = null;
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        clearKeepAlive();
+
+        if (event.code === 1000) {
+          updateStatus("disconnected");
+        } else {
+          setErrorMsg(
+            `Disconnected (${event.code}${event.reason ? ": " + event.reason : ""})`
+          );
+          updateStatus("error");
+        }
+      };
+    } catch (err) {
+      console.error("[ElevenLabs] Connection failed:", err);
+      setErrorMsg("Failed to connect");
+      updateStatus("error");
+    }
   }, [onTranscript, updateStatus, focusCampaign]);
 
   const disconnect = useCallback(() => {
+    clearKeepAlive();
     if (wsRef.current) {
-      wsRef.current.close();
+      wsRef.current.close(1000, "user_disconnect");
       wsRef.current = null;
     }
     audioQueueRef.current = [];
     isPlayingRef.current = false;
+    setErrorMsg("");
     updateStatus("disconnected");
   }, [updateStatus]);
+
+  const clearKeepAlive = () => {
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current);
+      keepAliveRef.current = null;
+    }
+  };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      clearKeepAlive();
       if (wsRef.current) {
-        wsRef.current.close();
+        wsRef.current.close(1000, "unmount");
         wsRef.current = null;
       }
     };
   }, []);
 
   const handleToggle = () => {
-    if (status === "disconnected") {
+    if (status === "disconnected" || status === "error") {
       connect();
     } else {
       disconnect();
@@ -275,7 +315,7 @@ export default function ElevenLabsAgent({
 
   const isActive = status === "connected" || status === "speaking";
 
-  /** Audio queue processor — web only */
+  /** Sequential audio playback — web only */
   const processAudioQueue = () => {
     if (Platform.OS !== "web") return;
     if (isPlayingRef.current) return;
@@ -297,9 +337,12 @@ export default function ElevenLabsAgent({
         bytes[i] = binaryStr.charCodeAt(i);
       }
 
-      // PCM 16-bit mono 16kHz
       const sampleRate = 16000;
       const numSamples = bytes.length / 2;
+      if (numSamples <= 0) {
+        isPlayingRef.current = false;
+        return;
+      }
       const audioBuffer = ctx.createBuffer(1, numSamples, sampleRate);
       const channelData = audioBuffer.getChannelData(0);
       const view = new DataView(bytes.buffer);
@@ -312,7 +355,6 @@ export default function ElevenLabsAgent({
       source.connect(ctx.destination);
       source.onended = () => {
         isPlayingRef.current = false;
-        // Process next chunk
         if (audioQueueRef.current.length > 0) {
           processAudioQueue();
         } else {
@@ -320,8 +362,24 @@ export default function ElevenLabsAgent({
         }
       };
       source.start();
-    } catch {
+    } catch (err) {
+      console.warn("[ElevenLabs] Audio error:", err);
       isPlayingRef.current = false;
+    }
+  };
+
+  const statusLabel = () => {
+    switch (status) {
+      case "disconnected":
+        return "Tap to start voice summary";
+      case "connecting":
+        return "Connecting to Snowball AI...";
+      case "connected":
+        return "Listening — speak or wait for summary";
+      case "speaking":
+        return "Agent speaking...";
+      case "error":
+        return errorMsg || "Connection failed — tap to retry";
     }
   };
 
@@ -329,9 +387,7 @@ export default function ElevenLabsAgent({
     <View style={s.container}>
       {/* Label */}
       <Text style={s.label}>
-        {focusCampaign
-          ? "Campaign Voice Summary"
-          : "Campaign Summarizer"}
+        {focusCampaign ? "Campaign Voice Summary" : "Campaign Summarizer"}
       </Text>
       <Text style={s.sublabel}>
         {focusCampaign
@@ -347,6 +403,7 @@ export default function ElevenLabsAgent({
             status === "connecting" && s.micBtnConnecting,
             status === "connected" && s.micBtnActive,
             status === "speaking" && s.micBtnSpeaking,
+            status === "error" && s.micBtnError,
           ]}
           onPress={handleToggle}
           activeOpacity={0.7}
@@ -357,25 +414,32 @@ export default function ElevenLabsAgent({
                 ? "volume-high"
                 : status === "connecting"
                 ? "hourglass-outline"
+                : status === "error"
+                ? "refresh"
                 : isActive
                 ? "stop"
                 : "play"
             }
             size={36}
-            color={isActive ? "#fff" : Dark.textSecondary}
+            color={
+              status === "error"
+                ? Brand.danger
+                : isActive
+                ? "#fff"
+                : Dark.textSecondary
+            }
           />
         </TouchableOpacity>
       </Animated.View>
 
       {/* Status */}
-      <Text style={s.statusText}>
-        {status === "disconnected" && "Tap to start"}
-        {status === "connecting" && "Connecting to Snowball AI..."}
-        {status === "connected" && "Listening — ask a question"}
-        {status === "speaking" && "Summarizing campaigns..."}
+      <Text
+        style={[s.statusText, status === "error" && { color: Brand.danger }]}
+      >
+        {statusLabel()}
       </Text>
 
-      {/* Active indicator */}
+      {/* Audio visualizer */}
       {isActive && (
         <View style={s.activeBar}>
           {[0, 1, 2, 3, 4].map((i) => (
@@ -396,7 +460,6 @@ export default function ElevenLabsAgent({
   );
 }
 
-// Extend global for audio context caching
 declare global {
   // eslint-disable-next-line no-var
   var _elevenLabsAudioCtx: AudioContext;
@@ -441,10 +504,16 @@ const s = StyleSheet.create({
     backgroundColor: Brand.secondary,
     borderColor: Brand.secondaryLight,
   },
+  micBtnError: {
+    backgroundColor: Dark.bgCard,
+    borderColor: Brand.danger,
+  },
   statusText: {
     fontSize: 13,
     color: Dark.textMuted,
     marginBottom: 16,
+    textAlign: "center",
+    paddingHorizontal: 24,
   },
   activeBar: {
     flexDirection: "row",
