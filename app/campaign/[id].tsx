@@ -1,35 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius, Shadows, StatusColors } from "@/constants/theme";
-import { Campaign } from "@/types";
-import { getCampaignById } from "@/services/mock-data";
+import { useCampaign } from "@/hooks/use-mock-store";
+import DemoControls from "@/components/DemoControls";
 
 export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [loading, setLoading] = useState(true);
+  const campaign = useCampaign(id);
 
-  useEffect(() => { loadCampaign(); }, [id]);
-
-  const loadCampaign = async () => {
-    if (!id) return;
-    setLoading(true);
-    const data = await getCampaignById(id);
-    setCampaign(data ?? null);
-    setLoading(false);
-  };
-
-  if (loading) return (
-    <SafeAreaView style={s.container}>
-      <View style={s.center}><ActivityIndicator size="large" color={Brand.primary} /></View>
-    </SafeAreaView>
-  );
   if (!campaign) return (
     <SafeAreaView style={s.container}>
       <View style={s.center}><Text style={s.errText}>Campaign not found</Text></View>
@@ -132,6 +116,7 @@ export default function CampaignDetailScreen() {
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>
+      <DemoControls focusCampaignId={campaign.id} />
     </SafeAreaView>
   );
 }

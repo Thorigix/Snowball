@@ -1,26 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius } from "@/constants/theme";
-import { mockConfirmDelivery, getCampaignById } from "@/services/mock-data";
-import { useEffect } from "react";
-import { Campaign } from "@/types";
+import { mockConfirmDelivery, getConfirmationThreshold } from "@/services/mock-data";
+import { useCampaign } from "@/hooks/use-mock-store";
 
 export default function DeliveryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const campaign = useCampaign(id);
   const [confirming, setConfirming] = useState(false);
   const [qrScanned, setQrScanned] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const c = await getCampaignById(id ?? "");
-      setCampaign(c ?? null);
-    })();
-  }, [id]);
 
   const handleScanQR = () => { setQrScanned(true); };
 
@@ -30,7 +22,9 @@ export default function DeliveryScreen() {
     const result = await mockConfirmDelivery(campaign.id);
     setConfirming(false);
     if (result.success) {
-      router.push({ pathname: "/success", params: { txHash: result.txHash, type: "delivery", campaignTitle: campaign.title } });
+      router.replace({ pathname: "/success", params: { txHash: result.txHash, type: "delivery", campaignTitle: campaign.title } });
+    } else {
+      Alert.alert("Cannot confirm", result.error ?? "Unknown error");
     }
   };
 
@@ -91,13 +85,28 @@ export default function DeliveryScreen() {
         </TouchableOpacity>
 
         {/* Progress */}
-        <View style={s.progressCard}>
-          <Text style={s.progressTitle}>Confirmation Progress</Text>
-          <View style={s.progBar}><View style={[s.progFill, { width: "33%" }]} /></View>
-          <Text style={s.progressDesc}>
-            When {campaign ? Math.ceil(campaign.targetParticipants * 0.66) : 2} of {campaign?.targetParticipants ?? 3} buyers confirm delivery, funds will be released to the seller.
-          </Text>
-        </View>
+        {campaign && (
+          <View style={s.progressCard}>
+            <Text style={s.progressTitle}>Confirmation Progress</Text>
+            <View style={s.progBar}>
+              <View
+                style={[
+                  s.progFill,
+                  {
+                    width: `${Math.min(
+                      100,
+                      (campaign.confirmationsCount / campaign.targetParticipants) * 100
+                    )}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={s.progressDesc}>
+              {campaign.confirmationsCount} of {campaign.targetParticipants} buyers confirmed.
+              When {getConfirmationThreshold(campaign.targetParticipants)} confirm, funds release to the seller.
+            </Text>
+          </View>
+        )}
 
         {/* Info */}
         <View style={s.infoCard}>

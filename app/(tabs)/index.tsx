@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Animated,
   Dimensions,
 } from "react-native";
@@ -14,28 +13,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius, StatusColors } from "@/constants/theme";
 import { Campaign } from "@/types";
-import { getCampaigns } from "@/services/mock-data";
+import { useCampaigns } from "@/hooks/use-mock-store";
+import DemoControls from "@/components/DemoControls";
 
 const { width } = Dimensions.get("window");
 
 export default function CampaignFeedScreen() {
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+  const campaigns = useCampaigns();
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const data = await getCampaigns();
-      setCampaigns(data);
-      setLoading(false);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    })();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   const getProgress = (c: Campaign) =>
@@ -59,16 +52,6 @@ export default function CampaignFeedScreen() {
     1: "headset-outline",
     2: "keypad-outline",
   };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={s.container} edges={["top"]}>
-        <View style={s.center}>
-          <ActivityIndicator size="large" color={Brand.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
@@ -204,6 +187,7 @@ export default function CampaignFeedScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+      <DemoControls />
     </SafeAreaView>
   );
 }

@@ -1,28 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius } from "@/constants/theme";
-import { getCampaignById, mockJoinCampaign } from "@/services/mock-data";
-import { useEffect } from "react";
-import { Campaign } from "@/types";
+import { mockJoinCampaign } from "@/services/mock-data";
+import { useCampaign } from "@/hooks/use-mock-store";
 
 export default function JoinCampaignScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [loading, setLoading] = useState(false);
+  const campaign = useCampaign(id);
   const [joining, setJoining] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const c = await getCampaignById(id ?? "");
-      setCampaign(c ?? null);
-      setLoading(false);
-    })();
-  }, [id]);
 
   const handleJoin = async () => {
     if (!campaign) return;
@@ -30,12 +19,16 @@ export default function JoinCampaignScreen() {
     const result = await mockJoinCampaign(campaign.id);
     setJoining(false);
     if (result.success) {
-      router.push({ pathname: "/success", params: { txHash: result.txHash, type: "deposit", campaignTitle: campaign.title } });
+      router.replace({ pathname: "/success", params: { txHash: result.txHash, type: "deposit", campaignTitle: campaign.title } });
+    } else {
+      Alert.alert("Cannot join", result.error ?? "Unknown error");
     }
   };
 
-  if (loading || !campaign) return (
-    <SafeAreaView style={s.container}><View style={s.center}><ActivityIndicator size="large" color={Brand.primary} /></View></SafeAreaView>
+  if (!campaign) return (
+    <SafeAreaView style={s.container}>
+      <View style={s.center}><Text style={{ color: Dark.textSecondary }}>Campaign not found</Text></View>
+    </SafeAreaView>
   );
 
   return (
