@@ -77,3 +77,23 @@ anchor build
 anchor test
 ```
 
+## A2 Campaign and Join Status
+
+A2 adds the first real on-chain Snowball escrow state.
+
+Implemented:
+
+- `Campaign` account
+- `Contribution` account
+- `CampaignStatus` enum
+- `create_campaign`
+- `join_campaign`
+
+The MVP uses devnet SOL/lamports directly in the campaign account for speed.
+
+Current lifecycle covered by tests:
+
+```text
+create_campaign → join_campaign x3 → campaign becomes Funded
+```
+
