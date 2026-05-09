@@ -1,106 +1,166 @@
+import React, { useCallback, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useConversation } from '@elevenlabs/react';
+import { Dark, Brand, Spacing, Radius, Shadows } from '@/constants/theme';
+import { ThemedText } from './themed-text';
+import { VoiceState } from '@/types';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+
 /**
- * ElevenLabs Voice Agent — native fallback.
- *
- * The web variant (ElevenLabsAgent.web.tsx) provides full two-way voice via
- * @elevenlabs/react. On Expo Go and native builds we surface a clear notice:
- * voice requires the web build or a development build with
- * @elevenlabs/react-native + LiveKit. Text chat (Gemini) on the AI tab still
- * works as the conversational fallback.
+ * ElevenLabsAgent
+ * 
+ * A premium, standalone voice agent component.
+ * Compatible with simple backend services via environment variables.
+ * No extra configuration needed by other developers.
  */
+export const ElevenLabsAgent: React.FC = () => {
+  const agentId = process.env.EXPO_PUBLIC_ELEVENLABS_AGENT_ID;
 
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Dark, Brand } from "@/constants/theme";
-import type { Campaign } from "@/types";
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log('Connected to ElevenLabs');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    onDisconnect: () => {
+      console.log('Disconnected from ElevenLabs');
+    },
+    onMessage: (message) => {
+      console.log('Received message:', message);
+    },
+    onError: (error) => {
+      console.error('ElevenLabs Error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+  });
 
-type AgentStatus = "disconnected" | "connecting" | "connected" | "speaking" | "error";
+  const { status, isSpeaking } = conversation;
 
-type Props = {
-  focusCampaign?: Campaign;
-  onTranscript?: (role: "user" | "agent", text: string) => void;
-  onStatusChange?: (status: AgentStatus) => void;
-};
+  const toggleConversation = useCallback(async () => {
+    try {
+      if (status === 'connected') {
+        await conversation.endSession();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else {
+        // Request microphone permission if needed (handled by browser/app)
+        await conversation.startSession({
+          agentId: agentId!,
+        });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+    } catch (error) {
+      console.error('Failed to toggle conversation:', error);
+    }
+  }, [status, conversation, agentId]);
 
-export default function ElevenLabsAgent({ focusCampaign }: Props) {
   return (
-    <View style={s.container}>
-      <View style={s.iconWrap}>
-        <Ionicons name="mic-off-outline" size={32} color={Dark.textMuted} />
-      </View>
-      <Text style={s.title}>
-        {focusCampaign ? "Campaign Voice Assistant" : "Snowball Voice Assistant"}
-      </Text>
-      <Text style={s.body}>
-        Voice with Sarah runs in the browser. Open Snowball with{" "}
-        <Text style={s.code}>npm run web</Text> for a live conversation, or use
-        the text chat below to ask anything about{" "}
-        {focusCampaign ? `"${focusCampaign.title}"` : "active campaigns"}.
-      </Text>
-      <View style={s.tip}>
-        <Ionicons name="information-circle-outline" size={14} color={Brand.primary} />
-        <Text style={s.tipText}>
-          Native voice requires a development build with{" "}
-          <Text style={s.code}>@elevenlabs/react-native</Text>.
-        </Text>
+    <View style={styles.container}>
+      <View style={styles.statusCard}>
+        <View style={styles.header}>
+          <View style={[styles.indicator, { backgroundColor: status === 'connected' ? Brand.success : Brand.danger }]} />
+          <ThemedText style={styles.statusText}>
+            {status === 'connected' ? 'Agent is Online' : status === 'connecting' ? 'Connecting...' : 'Agent Offline'}
+          </ThemedText>
+        </View>
+
+        <View style={styles.voiceIndicatorContainer}>
+          {isSpeaking ? (
+            <View style={styles.speakingWave}>
+               {/* Simplified wave animation for performance */}
+               <ActivityIndicator color={Brand.primary} size="small" />
+            </View>
+          ) : (
+            <ThemedText style={styles.subText}>
+              {status === 'connected' ? 'Listening...' : 'Tap to start conversation'}
+            </ThemedText>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: status === 'connected' ? Brand.danger : Brand.primary }
+          ]}
+          onPress={toggleConversation}
+          activeOpacity={0.8}
+        >
+          {status === 'connecting' ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <Ionicons 
+                name={status === 'connected' ? "stop" : "mic"} 
+                size={24} 
+                color="white" 
+              />
+              <ThemedText style={styles.buttonText}>
+                {status === 'connected' ? 'End Call' : 'Talk to AI'}
+              </ThemedText>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
-}
+};
 
-const s = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  iconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  statusCard: {
     backgroundColor: Dark.bgCard,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
+    padding: Spacing.xl,
+    borderRadius: Radius.xxl,
+    width: '100%',
+    ...Shadows.elevated,
     borderWidth: 1,
     borderColor: Dark.border,
   },
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: Dark.text,
-    marginBottom: 8,
-    textAlign: "center",
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  body: {
-    fontSize: 13,
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.sm,
+  },
+  statusText: {
+    fontSize: 14,
     color: Dark.textSecondary,
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: 8,
-    marginBottom: 16,
+    fontWeight: '600',
   },
-  tip: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: "rgba(91, 181, 162, 0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(91, 181, 162, 0.18)",
+  voiceIndicatorContainer: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
-  tipText: {
-    flex: 1,
+  speakingWave: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subText: {
     fontSize: 12,
     color: Dark.textMuted,
-    lineHeight: 16,
+    textAlign: 'center',
   },
-  code: {
-    fontFamily: "monospace",
-    color: Dark.text,
-    backgroundColor: Dark.bgCard,
-    paddingHorizontal: 4,
+  button: {
+    height: 56,
+    borderRadius: Radius.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
