@@ -17,15 +17,13 @@ const CLUSTER_QS = "?cluster=devnet";
 const TARGET_BUYERS = 3;
 const DEPOSIT_LAMPORTS = 50_000_000;
 
-const FUND_CREATOR = 80_000_000;  // 0.08 SOL
-const FUND_SELLER = 50_000_000;   // 0.05 SOL
-const FUND_BUYER = 120_000_000;   // 0.12 SOL each
+const FUND_CREATOR = 80_000_000; // 0.08 SOL
+const FUND_SELLER = 50_000_000; // 0.05 SOL
+const FUND_BUYER = 120_000_000; // 0.12 SOL each
 const MIN_PROVIDER_BALANCE = 700_000_000; // 0.7 SOL
 
-const txLink = (sig: string) =>
-  `${EXPLORER_BASE}/tx/${sig}${CLUSTER_QS}`;
-const addrLink = (pk: string) =>
-  `${EXPLORER_BASE}/address/${pk}${CLUSTER_QS}`;
+const txLink = (sig: string) => `${EXPLORER_BASE}/tx/${sig}${CLUSTER_QS}`;
+const addrLink = (pk: string) => `${EXPLORER_BASE}/address/${pk}${CLUSTER_QS}`;
 
 describe("snowball devnet demo flow", () => {
   const provider = anchor.AnchorProvider.env();
@@ -89,22 +87,10 @@ describe("snowball devnet demo flow", () => {
       creator.publicKey,
       FUND_CREATOR
     );
-    const sigFundSeller = await fundFromProvider(
-      seller.publicKey,
-      FUND_SELLER
-    );
-    const sigFundBuyer1 = await fundFromProvider(
-      buyer1.publicKey,
-      FUND_BUYER
-    );
-    const sigFundBuyer2 = await fundFromProvider(
-      buyer2.publicKey,
-      FUND_BUYER
-    );
-    const sigFundBuyer3 = await fundFromProvider(
-      buyer3.publicKey,
-      FUND_BUYER
-    );
+    const sigFundSeller = await fundFromProvider(seller.publicKey, FUND_SELLER);
+    const sigFundBuyer1 = await fundFromProvider(buyer1.publicKey, FUND_BUYER);
+    const sigFundBuyer2 = await fundFromProvider(buyer2.publicKey, FUND_BUYER);
+    const sigFundBuyer3 = await fundFromProvider(buyer3.publicKey, FUND_BUYER);
 
     const campaignPda = findCampaignPda(creator.publicKey);
     const contributionPda1 = findContributionPda(campaignPda, buyer1.publicKey);

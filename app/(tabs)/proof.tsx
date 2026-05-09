@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCampaigns } from "@/hooks/use-mock-store";
 import { Brand, Dark, Radius, Spacing, Typography, StatusColors } from "@/constants/theme";
 import { getExplorerAddressUrl, getExplorerTxUrl, PROGRAM_ID } from "@/constants/config";
-import type { CampaignTx } from "@/types";
+import { fetchDemoPreflight } from "@/services/backend";
+import type { CampaignTx, DemoPreflight } from "@/types";
 
 const partnerProof = [
   {
@@ -76,6 +77,11 @@ function txLabel(type: CampaignTx["type"]): string {
     .join(" ");
 }
 
+function isRealSolanaTx(tx: CampaignTx): boolean {
+  if (tx.id.startsWith("demo-")) return false;
+  return tx.type !== "raise_dispute" && tx.type !== "refund_buyer";
+}
+
 export default function ProofScreen() {
   const campaigns = useCampaigns();
   const liveCampaign = campaigns.find((c) => c.id === "campaign-rtx-5080-demo") ?? campaigns[0];
@@ -83,7 +89,24 @@ export default function ProofScreen() {
   const statusColor = liveCampaign
     ? StatusColors[liveCampaign.status] ?? StatusColors.OPEN
     : StatusColors.OPEN;
-  const proofScore = liveCampaign?.campaignPda ? 92 : 68;
+  const [preflight, setPreflight] = useState<DemoPreflight | null>(null);
+
+  useEffect(() => {
+    fetchDemoPreflight()
+      .then(setPreflight)
+      .catch(() => {
+        setPreflight({
+          backendOk: false,
+          programId: PROGRAM_ID,
+          rpcUrl: "https://api.devnet.solana.com",
+          providerBalanceSol: null,
+          campaignReachable: false,
+          lifiMode: "fallback",
+          elevenLabsMode: "missing_env",
+          warnings: ["Backend preflight unavailable"],
+        });
+      });
+  }, []);
 
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
@@ -96,11 +119,26 @@ export default function ProofScreen() {
               Live devnet state, sponsor fit, and grant narrative in one place.
             </Text>
           </View>
-          <View style={s.scoreBadge}>
-            <Text style={s.scoreValue}>{proofScore}</Text>
-            <Text style={s.scoreLabel}>/100</Text>
+          <View style={s.checkBadge}>
+            <Ionicons name="checkmark-done-outline" size={18} color={Brand.primary} />
+            <Text style={s.checkBadgeText}>Checklist</Text>
           </View>
         </View>
+
+        <SectionTitle title="Demo Preflight" subtitle="Non-mutating backend check before a judged run." />
+        <View style={s.preflightGrid}>
+          <ModeCard label="Backend" mode={preflight?.backendOk ? "Live" : "Offline"} tone={preflight?.backendOk ? "good" : "bad"} />
+          <ModeCard label="Campaign" mode={preflight?.campaignReachable ? "Reachable" : "Not initialized"} tone={preflight?.campaignReachable ? "good" : "warn"} />
+          <ModeCard label="Provider SOL" mode={preflight?.providerBalanceSol == null ? "Unknown" : `${preflight.providerBalanceSol} SOL`} tone={(preflight?.providerBalanceSol ?? 0) >= 0.5 ? "good" : "warn"} />
+          <ModeCard label="RPC" mode="Devnet" tone="good" />
+        </View>
+        {preflight?.warnings.length ? (
+          <View style={s.warningPanel}>
+            {preflight.warnings.slice(0, 3).map((warning) => (
+              <Text key={warning} style={s.warningText}>{warning}</Text>
+            ))}
+          </View>
+        ) : null}
 
         <View style={s.heroPanel}>
           <View style={s.heroTop}>
@@ -189,6 +227,14 @@ export default function ProofScreen() {
         </View>
 
         <SectionTitle title="Partner Fit" subtitle="Each integration maps to a Dev3pack sponsor surface." />
+        <View style={s.modeGrid}>
+          <ModeCard label="Solana escrow" mode="Live devnet" tone="good" />
+          <ModeCard label="Wallet deposit" mode="Live web wallet" tone="good" />
+          <ModeCard label="LI.FI" mode={preflight?.lifiMode === "live" ? "Live quote" : "Fallback route"} tone={preflight?.lifiMode === "live" ? "good" : "warn"} />
+          <ModeCard label="ElevenLabs" mode={preflight?.elevenLabsMode === "live" ? "Live agent" : "Fallback/missing env"} tone={preflight?.elevenLabsMode === "live" ? "good" : "warn"} />
+          <ModeCard label="Dispute/refund" mode="Demo-only state" tone="demo" />
+          <ModeCard label="USDC vault" mode="Roadmap stub" tone="demo" />
+        </View>
         <View style={s.partnerGrid}>
           {partnerProof.map((item) => (
             <View key={item.name} style={s.partnerCard}>
@@ -201,7 +247,7 @@ export default function ProofScreen() {
           ))}
         </View>
 
-        <SectionTitle title="Transaction Trail" subtitle="Tap any row to verify the devnet transaction on Explorer." />
+        <SectionTitle title="Transaction Trail" subtitle="Only real Solana signatures link to Explorer; demo events stay local." />
         <View style={s.txList}>
           {txs.length === 0 ? (
             <View style={s.emptyTx}>
@@ -211,23 +257,27 @@ export default function ProofScreen() {
               </Text>
             </View>
           ) : (
-            txs.slice(0, 8).map((tx) => (
+            txs.slice(0, 8).map((tx) => {
+              const realTx = isRealSolanaTx(tx);
+              return (
               <TouchableOpacity
                 key={tx.id}
-                style={s.txRow}
-                onPress={() => Linking.openURL(getExplorerTxUrl(tx.id))}
+                style={[s.txRow, !realTx && s.txRowLocal]}
+                onPress={() => realTx && Linking.openURL(getExplorerTxUrl(tx.id))}
+                disabled={!realTx}
                 activeOpacity={0.75}
               >
                 <View style={s.txIcon}>
-                  <Ionicons name="open-outline" size={14} color={Brand.solana} />
+                  <Ionicons name={realTx ? "open-outline" : "desktop-outline"} size={14} color={realTx ? Brand.solana : Dark.textMuted} />
                 </View>
                 <View style={s.txBody}>
                   <Text style={s.txTitle}>{txLabel(tx.type)}</Text>
                   <Text style={s.txNote} numberOfLines={2}>{tx.note}</Text>
                 </View>
-                <Text style={s.txHash}>{shortHash(tx.id)}</Text>
+                <Text style={s.txHash}>{realTx ? shortHash(tx.id) : "Local demo event"}</Text>
               </TouchableOpacity>
-            ))
+              );
+            })
           )}
         </View>
 
@@ -273,6 +323,32 @@ function AddressButton({ label, value }: { label: string; value?: string }) {
   );
 }
 
+function ModeCard({
+  label,
+  mode,
+  tone,
+}: {
+  label: string;
+  mode: string;
+  tone: "good" | "warn" | "bad" | "demo";
+}) {
+  const color =
+    tone === "good"
+      ? Brand.success
+      : tone === "bad"
+        ? Brand.danger
+        : tone === "demo"
+          ? Brand.solana
+          : Brand.warning;
+
+  return (
+    <View style={[s.modeCard, { borderColor: `${color}55` }]}>
+      <Text style={s.modeLabel}>{label}</Text>
+      <Text style={[s.modeValue, { color }]}>{mode}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Dark.bg },
   content: { paddingHorizontal: 24, paddingTop: 16 },
@@ -297,20 +373,27 @@ const s = StyleSheet.create({
     maxWidth: 280,
     marginTop: 6,
   },
-  scoreBadge: {
+  checkBadge: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
+    gap: Spacing.xs,
     backgroundColor: `${Brand.primary}14`,
     borderColor: `${Brand.primary}35`,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    minWidth: 82,
+    minWidth: 102,
     justifyContent: "center",
   },
-  scoreValue: { color: Brand.primary, fontSize: 28, fontWeight: Typography.bold },
-  scoreLabel: { color: Dark.textMuted, fontSize: Typography.caption, marginBottom: 5 },
+  checkBadgeText: { color: Brand.primary, fontSize: Typography.caption, fontWeight: Typography.semiBold },
+  preflightGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginBottom: Spacing.md },
+  modeGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginBottom: Spacing.lg },
+  modeCard: { width: "48%", backgroundColor: Dark.bgCard, borderWidth: 1, borderRadius: Radius.md, padding: Spacing.md },
+  modeLabel: { color: Dark.textMuted, fontSize: Typography.tiny, marginBottom: 4 },
+  modeValue: { fontSize: Typography.caption, fontWeight: Typography.semiBold },
+  warningPanel: { backgroundColor: `${Brand.warning}12`, borderColor: `${Brand.warning}35`, borderWidth: 1, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.xl, gap: 4 },
+  warningText: { color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
   heroPanel: {
     backgroundColor: Dark.bgCard,
     borderColor: Dark.border,
@@ -527,6 +610,9 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: Dark.border,
     padding: Spacing.md,
+  },
+  txRowLocal: {
+    opacity: 0.82,
   },
   txIcon: {
     width: 28,

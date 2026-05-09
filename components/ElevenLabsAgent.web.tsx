@@ -28,8 +28,7 @@ import { ELEVENLABS_AGENT_ID } from "@/constants/config";
 import { allCampaigns } from "@/services/mock-data";
 import type { Campaign } from "@/types";
 
-const AGENT_ID =
-  ELEVENLABS_AGENT_ID || "agent_5901kr50rz2ef1zv27zs7291e3e0";
+const AGENT_ID = ELEVENLABS_AGENT_ID;
 
 type AgentStatus = "disconnected" | "connecting" | "connected" | "speaking" | "error";
 
@@ -112,6 +111,7 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
   const status = conversation.status; // "disconnected" | "connecting" | "connected" | "disconnecting"
   const isSpeaking = conversation.isSpeaking;
   const isActive = status === "connected";
+  const hasAgentId = AGENT_ID.trim().length > 0;
 
   // Pulse the mic button when the agent is speaking.
   useEffect(() => {
@@ -158,7 +158,7 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
   }, [status, focusCampaign, conversation]);
 
   const start = async () => {
-    if (starting || isActive) return;
+    if (starting || isActive || !hasAgentId) return;
     setErrorMsg("");
     setStarting(true);
     onStatusChange?.("connecting");
@@ -196,6 +196,7 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
 
   const statusLabel = (() => {
     if (errorMsg) return errorMsg;
+    if (!hasAgentId) return "Voice credentials missing. Text AI fallback is available below.";
     if (starting || status === "connecting") return "Connecting to Snowball AI...";
     if (status === "connected" && isSpeaking) return "Sarah is speaking...";
     if (status === "connected") return "Listening — speak any time";
@@ -232,8 +233,10 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
             buttonState === "active" && s.micBtnActive,
             buttonState === "speaking" && s.micBtnSpeaking,
             buttonState === "error" && s.micBtnError,
+            !hasAgentId && s.micBtnDisabled,
           ]}
           onPress={handleToggle}
+          disabled={!hasAgentId}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -242,7 +245,7 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
                 ? "volume-high"
                 : buttonState === "connecting"
                 ? "hourglass-outline"
-                : buttonState === "error"
+                : buttonState === "error" || !hasAgentId
                 ? "refresh"
                 : isActive
                 ? "stop"
@@ -250,7 +253,7 @@ function AgentInner({ focusCampaign, onTranscript, onStatusChange }: Props) {
             }
             size={36}
             color={
-              buttonState === "error"
+              buttonState === "error" || !hasAgentId
                 ? Brand.danger
                 : isActive || buttonState === "speaking"
                 ? "#fff"
@@ -337,6 +340,9 @@ const s = StyleSheet.create({
   micBtnError: {
     backgroundColor: Dark.bgCard,
     borderColor: Brand.danger,
+  },
+  micBtnDisabled: {
+    opacity: 0.55,
   },
   statusText: {
     fontSize: 13,

@@ -10,9 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Dark, Brand, Spacing } from "@/constants/theme";
-import ElevenLabsAgent from "@/components/ElevenLabsAgent";
-import { getAiCampaignSummary, getAiRiskSummary, allCampaigns } from "@/services/mock-data";
+import { Dark, Brand } from "@/constants/theme";
+import { ElevenLabsAgent } from "@/components/ElevenLabsAgent";
+import { allCampaigns } from "@/services/mock-data";
+import { askGemini } from "@/services/gemini";
 import { useLocalSearchParams } from "expo-router";
 import { Campaign } from "@/types";
 
@@ -27,7 +28,6 @@ export default function AiTabScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [agentStatus, setAgentStatus] = useState("disconnected");
   const scrollRef = useRef<ScrollView>(null);
 
   // Find focused campaign if coming from campaign detail
@@ -52,9 +52,6 @@ export default function AiTabScreen() {
     setIsLoading(true);
 
     try {
-      const { askGemini } = require("@/services/gemini");
-      const id = focusCampaign?.id || "general";
-      
       const prompt = `
         User Question: "${t}"
         Context: ${focusCampaign ? `User is looking at "${focusCampaign.title}" campaign.` : "User is in general AI chat."}
@@ -67,7 +64,7 @@ export default function AiTabScreen() {
 
       const response = await askGemini(prompt);
       addTranscript("agent", response);
-    } catch (err) {
+    } catch {
       addTranscript("agent", "I'm having trouble connecting to my brain. Please try again.");
     } finally {
       setIsLoading(false);
@@ -102,7 +99,6 @@ export default function AiTabScreen() {
           <ElevenLabsAgent
             focusCampaign={focusCampaign}
             onTranscript={addTranscript}
-            onStatusChange={(s: string) => setAgentStatus(s)}
           />
         ) : (
           <View style={s.nativeBanner}>

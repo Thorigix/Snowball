@@ -7,10 +7,7 @@ export async function getLifiQuote(params: {
   toToken: string;
   fromAmount: string;
   fromAddress?: string;
+  toAddress?: string;
 }) {
-  return fetchLifiQuote({
-    ...params,
-    fromAddress:
-      params.fromAddress || "0x0000000000000000000000000000000000000000",
-  });
+  return fetchLifiQuote(params);
 }

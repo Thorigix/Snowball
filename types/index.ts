@@ -96,4 +96,17 @@ export type LifiRouteSummary = {
   estimatedTimeSeconds: number;
   routeId: string;
   summary?: string;
+  providerMode?: "live" | "fallback" | "missing_params";
+  requiredParams?: Record<string, string>;
+};
+
+export type DemoPreflight = {
+  backendOk: boolean;
+  programId: string;
+  rpcUrl: string;
+  providerBalanceSol: number | null;
+  campaignReachable: boolean;
+  lifiMode: "fallback" | "live" | "missing_params";
+  elevenLabsMode: "fallback" | "live" | "missing_env";
+  warnings: string[];
 };

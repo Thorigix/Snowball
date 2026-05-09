@@ -25,9 +25,8 @@ export default function SuccessScreen() {
     try {
       if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(txHash);
-      } else {
-        const Clipboard = require("react-native").Clipboard;
-        Clipboard?.setString?.(txHash);
+      } else if (Platform.OS !== "web") {
+        return;
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -39,7 +38,9 @@ export default function SuccessScreen() {
   const isDelivery = type === "delivery";
   const isDispute = type === "dispute";
   const isRefund = type === "refund";
-  const isDemoTx = typeof txHash === "string" && txHash.startsWith("demo-");
+  const isDemoTx =
+    typeof txHash === "string" &&
+    (txHash.startsWith("demo-") || isDispute || isRefund);
   const title = isDispute
     ? "Dispute Raised"
     : isRefund
@@ -90,7 +91,11 @@ export default function SuccessScreen() {
             <Ionicons name="receipt-outline" size={22} color={Brand.primary} />
           </View>
           <ReceiptRow label="Amount" value={amount && token ? `${amount} ${token}` : "Not provided"} />
-          <ReceiptRow label="Escrow PDA" value={escrowPda || "Pending backend sync"} mono />
+          <ReceiptRow
+            label="Escrow PDA"
+            value={escrowPda || (isDemoTx ? "Not available for this demo event" : "Pending backend sync")}
+            mono={!!escrowPda}
+          />
           <ReceiptRow label="Buyer wallet" value={buyerWallet || "Demo buyer"} mono />
           <ReceiptRow label="Status" value={status || (isDelivery ? "DELIVERY_REVIEW" : "LOCKED")} />
           {escrowPda ? (
@@ -125,9 +130,10 @@ export default function SuccessScreen() {
             </View>
             <Text style={s.txHash} numberOfLines={1}>{txHash}</Text>
             {isDemoTx ? (
-              <Text style={s.demoTxNote}>
-                Demo mode uses backend campaign state for this event. Escrow PDA proof appears above when devnet state is available.
-              </Text>
+              <View style={s.demoBadge}>
+                <Ionicons name="desktop-outline" size={14} color={Brand.warning} />
+                <Text style={s.demoTxNote}>Local demo event, not on-chain.</Text>
+              </View>
             ) : (
               <TouchableOpacity
                 style={s.explorerBtn}
@@ -193,6 +199,7 @@ const s = StyleSheet.create({
   explorerBtn: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   explorerText: { fontSize: Typography.bodySmall, color: Brand.solana, fontWeight: Typography.medium },
   demoTxNote: { fontSize: Typography.caption, color: Dark.textMuted, lineHeight: 18 },
+  demoBadge: { flexDirection: "row", alignItems: "center", gap: Spacing.xs, backgroundColor: `${Brand.warning}12`, borderWidth: 1, borderColor: `${Brand.warning}35`, borderRadius: Radius.md, padding: Spacing.sm },
   actions: { gap: Spacing.md },
   primaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md },
   primaryBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },

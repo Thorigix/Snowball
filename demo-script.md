@@ -10,7 +10,7 @@ Release rule: 2 of 3 delivery confirmations release funds to seller
 
 ## Demo Platform
 
-The live demo runs in a **desktop browser** (Chrome / Edge / Brave) via `npm run web`.
+The live demo runs in a **desktop browser** (Chrome / Edge / Brave) via `npm run web:demo`.
 
 Reasons:
 - Phantom / Solflare browser extensions sign the on-chain `join_campaign` instruction.
@@ -23,10 +23,10 @@ Expo Go on a physical device still loads the UI, but voice and `Sign Deposit` wi
 
 Before opening the app:
 
-1. Backend is up: `cd backend && npm run dev` (port 3001).
+1. Backend is up: `npm run backend:dev` (port 3001).
 2. Backend provider wallet has at least 0.5 devnet SOL: `solana balance --url devnet`. Each demo run consumes roughly 0.16 SOL (campaign init + 2 buyer seeds + fund-wallet). If low, top up via [faucet.solana.com](https://faucet.solana.com) or [faucet.quicknode.com/solana/devnet](https://faucet.quicknode.com/solana/devnet) — `solana airdrop` is heavily rate-limited.
 3. Browser has Phantom or Solflare installed and switched to **Solana Devnet**.
-4. Open Chrome to `http://localhost:8081` (Expo web URL).
+4. Open Chrome to `http://localhost:8082` (Expo web URL).
 
 ## Demo Flow (Live)
 
@@ -91,7 +91,7 @@ Show:
 
 ## Notes
 
-This demo uses devnet SOL for speed. The production version can extend the escrow to SPL USDC vaults.
+This demo uses devnet SOL for speed. Dispute/refund events are local demo state, not on-chain instructions. The production version can extend the escrow to SPL USDC vaults.
 
 ## Devnet Deployment
 

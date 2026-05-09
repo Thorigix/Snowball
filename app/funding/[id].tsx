@@ -8,6 +8,7 @@ import { getLifiQuote } from "@/services/lifi";
 import { getLifiQuoteMock } from "@/services/mock-data";
 import { LifiRouteSummary } from "@/types";
 import { goBackOrHome } from "@/hooks/use-safe-back";
+import { useWallet } from "@/hooks/use-wallet";
 
 const CHAINS = ["Base", "Ethereum", "Polygon", "Arbitrum", "Optimism"];
 const TOKENS = ["USDC", "USDT", "ETH", "WETH"];
@@ -17,9 +18,10 @@ export default function FundingScreen() {
   const router = useRouter();
   const [selectedChain, setSelectedChain] = useState("Base");
   const [selectedToken, setSelectedToken] = useState("USDC");
-  const [amount, setAmount] = useState("500");
+  const [amount] = useState("500");
   const [route, setRoute] = useState<LifiRouteSummary | null>(null);
   const [fetching, setFetching] = useState(false);
+  const wallet = useWallet();
 
   const fetchRoute = async () => {
     setFetching(true);
@@ -29,10 +31,11 @@ export default function FundingScreen() {
       
       const route = await getLifiQuote({
         fromChain: selectedChain,
-        toChain: "SOL",
+        toChain: "solana",
         fromToken: selectedToken,
         toToken: "SOL",
         fromAmount: amountInUnits,
+        toAddress: wallet.address,
       });
 
       setRoute({
@@ -40,10 +43,9 @@ export default function FundingScreen() {
         fromChain: selectedChain,
         fromToken: selectedToken,
         summary:
-          route.summary ??
-          `Bridge ${amount} ${selectedToken} to Solana through Snowball backend`,
+          route.summary ?? `Bridge ${amount} ${selectedToken} to Solana through Snowball backend`,
       });
-    } catch (err) {
+    } catch {
       console.warn("LI.FI fetch failed, falling back to mock");
       const r = await getLifiQuoteMock();
       setRoute({ ...r, fromChain: selectedChain, fromToken: selectedToken });
@@ -68,6 +70,19 @@ export default function FundingScreen() {
           <View style={s.lifiIcon}><Ionicons name="swap-horizontal" size={24} color={Brand.lifi} /></View>
           <Text style={s.lifiTitle}>Powered by LI.FI</Text>
           <Text style={s.lifiDesc}>Bridge tokens from any chain to Solana for your escrow deposit.</Text>
+        </View>
+
+        <View style={s.modeCard}>
+          <Text style={s.modeTitle}>Quote preview</Text>
+          <Text style={s.modeText}>Safe demo route summary is always available through the backend fallback.</Text>
+          <View style={s.modeDivider} />
+          <Text style={s.modeTitle}>Live quote attempt</Text>
+          <Text style={s.modeText}>
+            fromAddress: Missing EVM fromAddress{"\n"}
+            toAddress: {wallet.address || "Missing Solana toAddress"}{"\n"}
+            fromAmount: {(parseFloat(amount || "0") * 1000000).toString()}{"\n"}
+            fromChain: {selectedChain} · fromToken: {selectedToken}
+          </Text>
         </View>
 
         {/* From Section */}
@@ -119,7 +134,13 @@ export default function FundingScreen() {
         {/* Route Result */}
         {route && (
           <View style={s.routeCard}>
-            <Text style={s.routeTitle}>Route Found</Text>
+            <Text style={s.routeTitle}>
+              {route.providerMode === "live"
+                ? "Live LI.FI quote"
+                : route.providerMode === "missing_params"
+                  ? "Missing EVM fromAddress"
+                  : "Fallback route"}
+            </Text>
             <View style={s.routeRow}><Text style={s.routeLabel}>From</Text><Text style={s.routeValue}>{route.fromChain} {route.fromToken}</Text></View>
             <View style={s.routeRow}><Text style={s.routeLabel}>To</Text><Text style={s.routeValue}>Solana SOL</Text></View>
             <View style={s.routeRow}><Text style={s.routeLabel}>Est. Gas</Text><Text style={s.routeValue}>${route.estimatedGasUsd}</Text></View>
@@ -173,6 +194,10 @@ const s = StyleSheet.create({
   routeBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.lifi, paddingVertical: Spacing.lg, borderRadius: Radius.md, marginTop: Spacing.md, marginBottom: Spacing.lg },
   routeBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },
   routeCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.xl, borderWidth: 1, borderColor: "rgba(155, 127, 204,0.25)", marginBottom: Spacing.lg },
+  modeCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.md, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg },
+  modeTitle: { fontSize: Typography.caption, fontWeight: Typography.semiBold, color: Dark.text, marginBottom: 4 },
+  modeText: { fontSize: Typography.caption, color: Dark.textMuted, lineHeight: 18 },
+  modeDivider: { height: 1, backgroundColor: Dark.border, marginVertical: Spacing.md },
   routeTitle: { fontSize: Typography.h4, fontWeight: Typography.bold, color: Brand.lifi, marginBottom: Spacing.md },
   routeRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: Spacing.sm },
   routeLabel: { fontSize: Typography.bodySmall, color: Dark.textMuted },

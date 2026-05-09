@@ -1,5 +1,11 @@
 import { BACKEND_URL } from "@/constants/config";
-import type { Campaign, CampaignStatus, CampaignTx, LifiRouteSummary } from "@/types";
+import type {
+  Campaign,
+  CampaignStatus,
+  CampaignTx,
+  DemoPreflight,
+  LifiRouteSummary,
+} from "@/types";
 
 type BackendCampaign = {
   id: string;
@@ -162,6 +168,16 @@ export async function fetchLifiQuote(
       summary:
         data.summary ??
         `Fallback route from ${params.fromChain} ${params.fromToken} to Solana SOL`,
+      providerMode: data.reason ? "missing_params" : "fallback",
+      requiredParams: {
+        fromChain: params.fromChain,
+        toChain: params.toChain,
+        fromToken: params.fromToken,
+        toToken: params.toToken,
+        fromAmount: params.fromAmount,
+        fromAddress: params.fromAddress ?? "",
+        toAddress: params.toAddress ?? "",
+      },
     };
   }
 
@@ -174,7 +190,21 @@ export async function fetchLifiQuote(
     estimatedTimeSeconds: data.estimate?.executionDuration ?? 300,
     routeId: data.routeId ?? data.tool ?? "lifi-live-route",
     summary: `Bridge ${params.fromToken} to Solana via ${data.tool ?? "LI.FI"}`,
+    providerMode: "live",
+    requiredParams: {
+      fromChain: params.fromChain,
+      toChain: params.toChain,
+      fromToken: params.fromToken,
+      toToken: params.toToken,
+      fromAmount: params.fromAmount,
+      fromAddress: params.fromAddress ?? "",
+      toAddress: params.toAddress ?? "",
+    },
   };
+}
+
+export async function fetchDemoPreflight(): Promise<DemoPreflight> {
+  return requestJson<DemoPreflight>("/api/demo/preflight", undefined, 5000);
 }
 
 export async function fetchElevenLabsSummary(): Promise<string> {

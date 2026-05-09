@@ -30,6 +30,7 @@ import {
   getConfirmationThreshold,
 } from "@/services/mock-data";
 import { useCampaigns } from "@/hooks/use-mock-store";
+import { useWallet } from "@/hooks/use-wallet";
 import type { Campaign } from "@/types";
 
 type Props = {
@@ -44,7 +45,7 @@ type Action = {
   run: () => Promise<{ success: boolean; error?: string }>;
 };
 
-function demoSteps(campaign?: Campaign): {
+function demoSteps(campaign: Campaign | undefined, walletConnected: boolean): {
   label: string;
   detail: string;
   done: boolean;
@@ -63,14 +64,14 @@ function demoSteps(campaign?: Campaign): {
     {
       label: "Connect wallet",
       detail: "Open Wallet tab and connect Phantom or Solflare on web.",
-      done: !!current?.userJoined || (current?.currentParticipants ?? 0) > 0,
-      active: current?.status === "OPEN" && !current.userJoined,
+      done: walletConnected,
+      active: current?.status === "OPEN" && !walletConnected,
     },
     {
       label: "Deposit",
       detail: "Join the group buy; funds move into escrow and seller cannot withdraw.",
-      done: (current?.currentParticipants ?? 0) >= (current?.targetParticipants ?? 1),
-      active: current?.status === "OPEN",
+      done: !!current?.userJoined || current?.status !== "OPEN",
+      active: walletConnected && current?.status === "OPEN" && !current?.userJoined,
     },
     {
       label: "Ship",
@@ -157,6 +158,7 @@ export default function DemoControls({ focusCampaignId }: Props) {
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const campaigns = useCampaigns();
+  const wallet = useWallet();
 
   if (!DEMO_MODE) return null;
 
@@ -167,7 +169,7 @@ export default function DemoControls({ focusCampaignId }: Props) {
       ]
     : campaigns;
   const focusedCampaign = ordered[0];
-  const steps = demoSteps(focusedCampaign);
+  const steps = demoSteps(focusedCampaign, wallet.connected);
 
   const runAction = async (campaignId: string, action: Action) => {
     if (busyId) return;

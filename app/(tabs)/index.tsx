@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -24,7 +24,7 @@ const { width } = Dimensions.get("window");
 export default function CampaignFeedScreen() {
   const router = useRouter();
   const campaigns = useCampaigns();
-  const fadeAnim = useState(new Animated.Value(0))[0];
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   const [resetting, setResetting] = useState(false);
 
   const handleRestart = async () => {
@@ -50,7 +50,7 @@ export default function CampaignFeedScreen() {
       duration: 400,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const getProgress = (c: Campaign) =>
     c.targetParticipants > 0 ? c.currentParticipants / c.targetParticipants : 0;

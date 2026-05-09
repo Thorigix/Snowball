@@ -8,10 +8,11 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Dark, Brand, Spacing, Radius } from "@/constants/theme";
+import { Dark, Brand } from "@/constants/theme";
 import {
   connectWallet,
   disconnectWallet,
@@ -22,7 +23,6 @@ import { fundConnectedWallet } from "@/services/backend";
 import { useWallet } from "@/hooks/use-wallet";
 import { useCampaigns } from "@/hooks/use-mock-store";
 import { useRouter } from "expo-router";
-import { Linking } from "react-native";
 
 const ESCROW_STATUSES: Record<string, { label: string; tint: string }> = {
   OPEN: { label: "Awaiting buyers", tint: Brand.warning },

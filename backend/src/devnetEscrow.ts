@@ -77,6 +77,17 @@ export type ChainSnapshot = {
   buyers: string[];
 };
 
+export type DemoPreflight = {
+  backendOk: boolean;
+  programId: string;
+  rpcUrl: string;
+  providerBalanceSol: number | null;
+  campaignReachable: boolean;
+  lifiMode: "fallback" | "live" | "missing_params";
+  elevenLabsMode: "fallback" | "live" | "missing_env";
+  warnings: string[];
+};
+
 type Runtime = {
   connection: any;
   payer: any;
@@ -398,4 +409,65 @@ export async function fundExternalWallet(address: string): Promise<string> {
   const sig = await send(rt, tx, [rt.payer]);
   addTx(rt, "fund_buyer", sig, `Funded connected wallet ${address} with 0.06 devnet SOL`);
   return sig;
+}
+
+export async function getDemoPreflight(): Promise<DemoPreflight> {
+  const warnings: string[] = [];
+  const connection = new Connection(RPC_URL, "confirmed");
+  let providerBalanceSol: number | null = null;
+
+  try {
+    const payer = loadPayer();
+    const balance = await connection.getBalance(payer.publicKey, "confirmed");
+    providerBalanceSol = Number((balance / LAMPORTS_PER_SOL).toFixed(4));
+    if (balance < 500_000_000) {
+      warnings.push("Provider wallet below 0.5 SOL");
+    }
+  } catch (error) {
+    warnings.push(
+      error instanceof Error
+        ? `Provider wallet unavailable: ${error.message}`
+        : "Provider wallet unavailable"
+    );
+  }
+
+  let campaignReachable = false;
+  if (runtime) {
+    try {
+      await readCampaign(runtime);
+      campaignReachable = true;
+    } catch (error) {
+      warnings.push(
+        error instanceof Error
+          ? `Campaign account unavailable: ${error.message}`
+          : "Campaign account unavailable"
+      );
+    }
+  } else {
+    warnings.push("Campaign not initialized yet; press Restart Demo or open the campaign endpoint");
+  }
+
+  const lifiMode = process.env.LIFI_API_KEY ? "live" : "fallback";
+  const elevenLabsMode =
+    process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID
+      ? "live"
+      : "missing_env";
+
+  if (lifiMode === "fallback") {
+    warnings.push("LI.FI API key missing; quote preview uses fallback route when live params fail");
+  }
+  if (elevenLabsMode === "missing_env") {
+    warnings.push("ElevenLabs credentials missing; AI voice/TTS uses fallback where available");
+  }
+
+  return {
+    backendOk: true,
+    programId: PROGRAM_ID.toBase58(),
+    rpcUrl: RPC_URL,
+    providerBalanceSol,
+    campaignReachable,
+    lifiMode,
+    elevenLabsMode,
+    warnings,
+  };
 }

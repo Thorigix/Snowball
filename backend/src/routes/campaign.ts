@@ -74,7 +74,14 @@ router.post("/fund-wallet", async (req: Request, res: Response) => {
     }
     const txHash = await fundExternalWallet(address);
     const campaign = await getDevnetCampaignSnapshot();
-    return res.json({ success: true, txHash, campaign });
+    return res.json({
+      success: true,
+      txHash,
+      campaign,
+      demoOnly: true,
+      warning:
+        "fund-wallet is intended for local demos only. Do not expose it publicly without authentication and rate limits.",
+    });
   } catch (error) {
     return res.status(400).json({
       success: false,
