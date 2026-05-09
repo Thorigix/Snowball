@@ -1,5 +1,6 @@
 /**
  * Snowball — App Configuration
+ * Hassas veriler .env dosyasından okunur (EXPO_PUBLIC_ prefix)
  */
 
 export const DEMO_MODE = true;
@@ -22,8 +23,13 @@ export const getExplorerAddressUrl = (address: string) =>
   `${EXPLORER_BASE_URL}/address/${address}?cluster=${SOLANA_NETWORK}`;
 
 /** ElevenLabs Conversational AI */
-export const ELEVENLABS_AGENT_ID = "REDACTED";
+export const ELEVENLABS_AGENT_ID =
+  process.env.EXPO_PUBLIC_ELEVENLABS_AGENT_ID ?? "";
 
 /** Gemini */
-export const GEMINI_API_KEY = "REDACTED";
-export const FIREBASE_PROJECT_NUMBER = "REDACTED";
+export const GEMINI_API_KEY =
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? "";
+
+/** Firebase */
+export const FIREBASE_PROJECT_NUMBER =
+  process.env.EXPO_PUBLIC_FIREBASE_PROJECT_NUMBER ?? "";
