@@ -42,7 +42,7 @@ export default function AiTabScreen() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // Text-based AI for typed questions
+  // Text-based AI using real Gemini
   const sendTextMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const t = text.trim();
@@ -50,44 +50,27 @@ export default function AiTabScreen() {
     addTranscript("user", t);
     setIsLoading(true);
 
-    let response = "";
-    const lower = t.toLowerCase();
+    try {
+      const { askGemini } = require("@/services/gemini");
+      const id = focusCampaign?.id || "general";
+      
+      const prompt = `
+        User Question: "${t}"
+        Context: ${focusCampaign ? `User is looking at "${focusCampaign.title}" campaign.` : "User is in general AI chat."}
+        Platform: Snowball (Solana Group Buy + Escrow + LI.FI).
+        
+        Campaign Context (if any): ${JSON.stringify(focusCampaign || "none")}
+        
+        Answer professionally. Use no emojis. Focus on how Snowball's Solana escrow protects buyers.
+      `;
 
-    if (lower.includes("escrow") || lower.includes("protect")) {
-      response =
-        "Your funds are locked in a Solana escrow program. " +
-        "The seller cannot withdraw until enough buyers confirm delivery. " +
-        "If the seller doesn't ship, you get a full refund.";
-    } else if (lower.includes("campaign") || lower.includes("explain")) {
-      const id = focusCampaign?.id || "campaign-rtx-5080-demo";
-      response = await getAiCampaignSummary(id);
-    } else if (
-      lower.includes("safe") ||
-      lower.includes("risk") ||
-      lower.includes("seller")
-    ) {
-      const risk = await getAiRiskSummary();
-      response = `Risk Level: ${risk.riskLevel.toUpperCase()} - ${risk.summary}`;
-    } else if (
-      lower.includes("lifi") ||
-      lower.includes("bridge") ||
-      lower.includes("chain")
-    ) {
-      response =
-        "LI.FI finds the best route to bridge tokens from any chain to Solana. " +
-        "You can start with USDC on Base and get SOL for your escrow deposit.";
-    } else {
-      response =
-        "I can help you with:\n" +
-        "- How Solana escrow protects your funds\n" +
-        "- Campaign details and status\n" +
-        "- LI.FI cross-chain routes\n" +
-        "- Seller risk assessment\n" +
-        "Try asking about one of these topics.";
+      const response = await askGemini(prompt);
+      addTranscript("agent", response);
+    } catch (err) {
+      addTranscript("agent", "I'm having trouble connecting to my brain. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    addTranscript("agent", response);
-    setIsLoading(false);
   };
 
   return (

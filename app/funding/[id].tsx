@@ -21,9 +21,36 @@ export default function FundingScreen() {
 
   const fetchRoute = async () => {
     setFetching(true);
-    const r = await getLifiQuoteMock();
-    setRoute({ ...r, fromChain: selectedChain, fromToken: selectedToken });
-    setFetching(false);
+    try {
+      const { getLifiQuote } = require("@/services/lifi");
+      // Amount is hardcoded in demo, but we convert it to decimals (assuming 6 for USDC)
+      const amountInUnits = (parseFloat(amount) * 1000000).toString();
+      
+      const data = await getLifiQuote({
+        fromChain: selectedChain,
+        toChain: "SOL",
+        fromToken: selectedToken,
+        toToken: "SOL",
+        fromAmount: amountInUnits,
+      });
+
+      setRoute({
+        fromChain: selectedChain,
+        fromToken: selectedToken,
+        toChain: "Solana",
+        toToken: "SOL",
+        estimatedGasUsd: data.estimate.gasCosts[0]?.amountUsd || "0",
+        estimatedTimeSeconds: data.estimate.executionDuration || 300,
+        routeId: data.id,
+        summary: `Bridge ${amount} ${selectedToken} to Solana via ${data.tool}`,
+      });
+    } catch (err) {
+      console.warn("LI.FI fetch failed, falling back to mock");
+      const r = await getLifiQuoteMock();
+      setRoute({ ...r, fromChain: selectedChain, fromToken: selectedToken });
+    } finally {
+      setFetching(false);
+    }
   };
 
   return (
