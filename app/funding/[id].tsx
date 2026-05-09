@@ -37,7 +37,7 @@ export default function FundingScreen() {
       setRoute({
         fromChain: selectedChain,
         fromToken: selectedToken,
-        toChain: "Solana",
+        toChain: "solana",
         toToken: "SOL",
         estimatedGasUsd: data.estimate.gasCosts[0]?.amountUsd || "0",
         estimatedTimeSeconds: data.estimate.executionDuration || 300,
