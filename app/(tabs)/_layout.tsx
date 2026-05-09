@@ -1,7 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { View, StyleSheet } from "react-native";
-
 import { Dark, Brand, Radius } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,13 +20,11 @@ export default function TabLayout() {
         options={{
           title: "Campaigns",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrap : undefined}>
-              <Ionicons
-                name={focused ? "layers" : "layers-outline"}
-                size={24}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              name={focused ? "layers" : "layers-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -36,13 +33,11 @@ export default function TabLayout() {
         options={{
           title: "Wallet",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrap : undefined}>
-              <Ionicons
-                name={focused ? "wallet" : "wallet-outline"}
-                size={24}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              name={focused ? "wallet" : "wallet-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -51,13 +46,11 @@ export default function TabLayout() {
         options={{
           title: "AI",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconWrap : undefined}>
-              <Ionicons
-                name={focused ? "sparkles" : "sparkles-outline"}
-                size={24}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              name={focused ? "sparkles" : "sparkles-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -70,18 +63,13 @@ const styles = StyleSheet.create({
     backgroundColor: Dark.bgElevated,
     borderTopColor: Dark.border,
     borderTopWidth: 1,
-    height: 70,
-    paddingBottom: 10,
-    paddingTop: 8,
+    height: 64,
+    paddingBottom: 8,
+    paddingTop: 6,
   },
   tabLabel: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 10,
+    fontWeight: "500",
     marginTop: 2,
-  },
-  activeIconWrap: {
-    backgroundColor: "rgba(91, 181, 162, 0.12)",
-    borderRadius: Radius.sm,
-    padding: 4,
   },
 });

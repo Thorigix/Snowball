@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
+  Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-
-import { Dark, Brand, Typography, Spacing, Radius, Shadows, StatusColors } from "@/constants/theme";
+import { Dark, Brand, Typography, Spacing, Radius, StatusColors } from "@/constants/theme";
 import { Campaign } from "@/types";
 import { getCampaigns } from "@/services/mock-data";
+
+const { width } = Dimensions.get("window");
 
 export default function CampaignFeedScreen() {
   const router = useRouter();
@@ -22,15 +24,19 @@ export default function CampaignFeedScreen() {
   const [loading, setLoading] = useState(true);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  useEffect(() => { loadCampaigns(); }, []);
-
-  const loadCampaigns = async () => {
-    setLoading(true);
-    const data = await getCampaigns();
-    setCampaigns(data);
-    setLoading(false);
-    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-  };
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const data = await getCampaigns();
+      setCampaigns(data);
+      setLoading(false);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    })();
+  }, []);
 
   const getProgress = (c: Campaign) =>
     c.targetParticipants > 0 ? c.currentParticipants / c.targetParticipants : 0;
@@ -38,238 +44,305 @@ export default function CampaignFeedScreen() {
   const getTimeLeft = (deadline: string) => {
     const diff = new Date(deadline).getTime() - Date.now();
     if (diff <= 0) return "Expired";
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    if (days > 0) return `${days}d ${hours}h left`;
-    return `${hours}h left`;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    return d > 0 ? `${d}d ${h}h` : `${h}h`;
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="snow-outline" size={24} color={Brand.primary} />
-          <View>
-            <Text style={styles.logo}>Snowball</Text>
-            <Text style={styles.subtitle}>Group Buying with Trust</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="notifications-outline" size={20} color={Dark.textSecondary} />
-        </TouchableOpacity>
-      </View>
+  const totalEscrow = campaigns.reduce(
+    (a, c) => a + parseFloat(c.totalDeposited),
+    0
+  );
 
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Ionicons name="layers-outline" size={16} color={Brand.primary} />
-          <Text style={styles.statValue}>{campaigns.length}</Text>
-          <Text style={styles.statLabel}>active</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Ionicons name="people-outline" size={16} color={Dark.textSecondary} />
-          <Text style={styles.statValue}>
-            {campaigns.reduce((a, c) => a + c.currentParticipants, 0)}
-          </Text>
-          <Text style={styles.statLabel}>buyers</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Ionicons name="shield-checkmark-outline" size={16} color={Dark.textSecondary} />
-          <Text style={styles.statLabel}>escrow secured</Text>
-        </View>
-      </View>
+  const CARD_ICONS: Record<number, string> = {
+    0: "hardware-chip-outline",
+    1: "headset-outline",
+    2: "keypad-outline",
+  };
 
-      {loading ? (
-        <View style={styles.loadingWrap}>
+  if (loading) {
+    return (
+      <SafeAreaView style={s.container} edges={["top"]}>
+        <View style={s.center}>
           <ActivityIndicator size="large" color={Brand.primary} />
         </View>
-      ) : (
-        <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View style={{ opacity: fadeAnim }}>
-            {campaigns.map((campaign, index) => (
-              <TouchableOpacity
-                key={campaign.id}
-                style={styles.card}
-                activeOpacity={0.7}
-                onPress={() => router.push(`/campaign/${campaign.id}`)}
-              >
-                {/* Card Top */}
-                <View style={styles.cardTop}>
-                  <View style={styles.cardIcon}>
-                    <Ionicons
-                      name={
-                        index === 0
-                          ? "hardware-chip-outline"
-                          : index === 1
-                          ? "headset-outline"
-                          : "keypad-outline"
-                      }
-                      size={22}
-                      color={Brand.primary}
-                    />
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {campaign.title}
-                    </Text>
-                    <View style={styles.sellerRow}>
-                      <Ionicons name="storefront-outline" size={12} color={Dark.textMuted} />
-                      <Text style={styles.sellerName}>{campaign.sellerName}</Text>
-                    </View>
-                  </View>
-                  <View style={[styles.statusBadge, { backgroundColor: StatusColors[campaign.status]?.bg }]}>
-                    <Text style={[styles.statusText, { color: StatusColors[campaign.status]?.text }]}>
-                      {campaign.status}
-                    </Text>
-                  </View>
-                </View>
+      </SafeAreaView>
+    );
+  }
 
-                {/* Progress */}
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${getProgress(campaign) * 100}%` }]} />
+  return (
+    <SafeAreaView style={s.container} edges={["top"]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.scroll}
+      >
+        {/* Header */}
+        <View style={s.header}>
+          <View>
+            <Text style={s.greeting}>Welcome back</Text>
+            <Text style={s.appName}>Snowball</Text>
+          </View>
+          <TouchableOpacity style={s.avatarBtn}>
+            <Ionicons name="person-outline" size={18} color={Dark.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Balance Card */}
+        <View style={s.balanceSection}>
+          <Text style={s.balanceLabel}>Total Escrow</Text>
+          <Text style={s.balanceValue}>
+            {totalEscrow.toFixed(2)} <Text style={s.balanceCurrency}>SOL</Text>
+          </Text>
+          <View style={s.balanceMeta}>
+            <View style={s.metaChip}>
+              <View style={s.metaDot} />
+              <Text style={s.metaText}>Devnet</Text>
+            </View>
+            <Text style={s.metaSep}>|</Text>
+            <Text style={s.metaText}>
+              {campaigns.length} campaigns
+            </Text>
+            <Text style={s.metaSep}>|</Text>
+            <Text style={s.metaText}>
+              {campaigns.reduce((a, c) => a + c.currentParticipants, 0)} buyers
+            </Text>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={s.actions}>
+          {[
+            { icon: "add-circle-outline", label: "Join", color: Brand.primary },
+            { icon: "swap-horizontal-outline", label: "Bridge", color: Brand.secondary },
+            { icon: "shield-checkmark-outline", label: "Escrow", color: Brand.primary },
+            { icon: "chatbubble-outline", label: "AI", color: Brand.secondary },
+          ].map((a, i) => (
+            <TouchableOpacity key={i} style={s.actionItem}>
+              <View style={[s.actionIcon, { backgroundColor: `${a.color}15` }]}>
+                <Ionicons name={a.icon as any} size={22} color={a.color} />
+              </View>
+              <Text style={s.actionLabel}>{a.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Section */}
+        <View style={s.sectionRow}>
+          <Text style={s.sectionTitle}>Active Campaigns</Text>
+          <Text style={s.sectionBadge}>{campaigns.length}</Text>
+        </View>
+
+        {/* Campaign List */}
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {campaigns.map((campaign, idx) => (
+            <TouchableOpacity
+              key={campaign.id}
+              style={s.card}
+              activeOpacity={0.6}
+              onPress={() => router.push(`/campaign/${campaign.id}`)}
+            >
+              <View style={s.cardRow}>
+                <View style={s.cardIconWrap}>
+                  <Ionicons
+                    name={(CARD_ICONS[idx] ?? "cube-outline") as any}
+                    size={20}
+                    color={Brand.primary}
+                  />
                 </View>
-                <View style={styles.progressInfo}>
-                  <Text style={styles.progressText}>
-                    <Text style={styles.progressHighlight}>{campaign.currentParticipants}</Text>
-                    {" / "}{campaign.targetParticipants} buyers
+                <View style={s.cardContent}>
+                  <Text style={s.cardTitle} numberOfLines={1}>
+                    {campaign.title}
                   </Text>
-                  <Text style={styles.timeLeft}>{getTimeLeft(campaign.deadline)}</Text>
+                  <Text style={s.cardSeller}>{campaign.sellerName}</Text>
                 </View>
+                <View style={s.cardRight}>
+                  <Text style={s.cardPrice}>
+                    {campaign.pricePerUser}{" "}
+                    <Text style={s.cardToken}>{campaign.tokenSymbol}</Text>
+                  </Text>
+                  <View
+                    style={[
+                      s.statusDot,
+                      {
+                        backgroundColor:
+                          StatusColors[campaign.status]?.text ?? Dark.textMuted,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
 
-                {/* Bottom */}
-                <View style={styles.cardBottom}>
-                  <View>
-                    <Text style={styles.priceLabel}>per buyer</Text>
-                    <Text style={styles.priceValue}>
-                      {campaign.pricePerUser}{" "}
-                      <Text style={styles.tokenSymbol}>{campaign.tokenSymbol}</Text>
-                    </Text>
-                  </View>
-                  <View style={styles.escrowBadge}>
-                    <Ionicons name="lock-closed-outline" size={11} color={Brand.primary} />
-                    <Text style={styles.escrowText}>Escrow</Text>
-                  </View>
+              {/* Progress */}
+              <View style={s.progressRow}>
+                <View style={s.progressTrack}>
+                  <View
+                    style={[
+                      s.progressFill,
+                      { width: `${getProgress(campaign) * 100}%` },
+                    ]}
+                  />
                 </View>
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      )}
+                <Text style={s.progressLabel}>
+                  {campaign.currentParticipants}/{campaign.targetParticipants}
+                </Text>
+              </View>
+
+              <View style={s.cardFooter}>
+                <View style={s.footerChip}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={10}
+                    color={Dark.textMuted}
+                  />
+                  <Text style={s.footerChipText}>Escrow</Text>
+                </View>
+                <Text style={s.footerTime}>{getTimeLeft(campaign.deadline)}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Dark.bg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  scroll: { paddingHorizontal: 24, paddingTop: 8 },
 
-  // Header — open, no box
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    marginBottom: 28,
   },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: Spacing.md },
-  logo: {
-    fontSize: Typography.h3,
-    fontWeight: Typography.bold,
-    color: Dark.text,
-    letterSpacing: -0.3,
-  },
-  subtitle: { fontSize: Typography.tiny, color: Dark.textMuted, marginTop: 1 },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.full,
-    backgroundColor: Dark.bgCard,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  // Stats row — flat, no container
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    gap: Spacing.lg,
-  },
-  statItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  statValue: { fontSize: Typography.bodySmall, fontWeight: Typography.semiBold, color: Dark.text },
-  statLabel: { fontSize: Typography.caption, color: Dark.textMuted },
-  statDivider: { width: 1, height: 14, backgroundColor: Dark.border },
-
-  // Loading
-  loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  // List
-  list: { flex: 1 },
-  listContent: { paddingHorizontal: Spacing.xl, paddingTop: Spacing.sm },
-
-  // Card — subtle border, not heavy
-  card: {
-    backgroundColor: Dark.bgCard,
-    borderRadius: Radius.md,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Dark.border,
-  },
-  cardTop: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.md },
-  cardIcon: {
+  greeting: { fontSize: 13, color: Dark.textMuted, marginBottom: 2 },
+  appName: { fontSize: 26, fontWeight: "700", color: Dark.text, letterSpacing: -0.5 },
+  avatarBtn: {
     width: 40,
     height: 40,
-    borderRadius: Radius.sm,
-    backgroundColor: Dark.surface,
+    borderRadius: 20,
+    backgroundColor: Dark.bgCard,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: Spacing.md,
   },
-  cardInfo: { flex: 1 },
-  cardTitle: { fontSize: Typography.body, fontWeight: Typography.medium, color: Dark.text, marginBottom: 2 },
-  sellerRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  sellerName: { fontSize: Typography.caption, color: Dark.textMuted },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.sm },
-  statusText: { fontSize: 10, fontWeight: Typography.semiBold, textTransform: "uppercase", letterSpacing: 0.5 },
 
-  // Progress
-  progressBar: { height: 4, backgroundColor: Dark.surface, borderRadius: Radius.full, overflow: "hidden", marginBottom: 6 },
-  progressFill: { height: "100%", backgroundColor: Brand.primary, borderRadius: Radius.full },
-  progressInfo: { flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.md },
-  progressText: { fontSize: Typography.caption, color: Dark.textSecondary },
-  progressHighlight: { color: Brand.primary, fontWeight: Typography.medium },
-  timeLeft: { fontSize: Typography.caption, color: Dark.textMuted },
+  // Balance
+  balanceSection: { marginBottom: 32 },
+  balanceLabel: { fontSize: 13, color: Dark.textMuted, marginBottom: 6 },
+  balanceValue: { fontSize: 42, fontWeight: "700", color: Dark.text, letterSpacing: -1.5 },
+  balanceCurrency: { fontSize: 20, fontWeight: "500", color: Dark.textSecondary },
+  balanceMeta: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 8 },
+  metaChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: Dark.bgCard,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  metaDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Brand.success },
+  metaText: { fontSize: 12, color: Dark.textMuted },
+  metaSep: { fontSize: 12, color: Dark.border },
 
-  // Bottom
-  cardBottom: {
+  // Actions
+  actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Dark.border,
+    marginBottom: 36,
+    paddingHorizontal: 8,
   },
-  priceLabel: { fontSize: 10, color: Dark.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  priceValue: { fontSize: Typography.h4, fontWeight: Typography.semiBold, color: Dark.text },
-  tokenSymbol: { fontSize: Typography.caption, color: Brand.primary, fontWeight: Typography.medium },
-  escrowBadge: {
+  actionItem: { alignItems: "center", gap: 6 },
+  actionIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionLabel: { fontSize: 11, color: Dark.textSecondary, fontWeight: "500" },
+
+  // Section
+  sectionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: "600", color: Dark.text },
+  sectionBadge: {
+    fontSize: 12,
+    color: Brand.primary,
+    fontWeight: "600",
+    backgroundColor: `${Brand.primary}15`,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+
+  // Card
+  card: {
+    backgroundColor: Dark.bgCard,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  cardRow: { flexDirection: "row", alignItems: "center" },
+  cardIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: `${Brand.primary}12`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  cardContent: { flex: 1 },
+  cardTitle: { fontSize: 15, fontWeight: "600", color: Dark.text, marginBottom: 2 },
+  cardSeller: { fontSize: 12, color: Dark.textMuted },
+  cardRight: { alignItems: "flex-end", gap: 6 },
+  cardPrice: { fontSize: 15, fontWeight: "600", color: Dark.text },
+  cardToken: { fontSize: 12, color: Brand.primary, fontWeight: "500" },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+
+  // Progress
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 14,
+    gap: 8,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 3,
+    backgroundColor: Dark.surface,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: Brand.primary,
+    borderRadius: 2,
+  },
+  progressLabel: { fontSize: 11, color: Dark.textMuted, fontWeight: "500" },
+
+  // Footer
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  footerChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.sm,
-    backgroundColor: Dark.surface,
   },
-  escrowText: { fontSize: 10, color: Dark.textSecondary },
+  footerChipText: { fontSize: 10, color: Dark.textMuted },
+  footerTime: { fontSize: 11, color: Dark.textMuted },
 });
