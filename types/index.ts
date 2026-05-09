@@ -71,7 +71,9 @@ export type CampaignTx = {
     | "join"
     | "mark_shipped"
     | "confirm_delivery"
-    | "release_funds";
+    | "release_funds"
+    | "raise_dispute"
+    | "refund_buyer";
   createdAt: string;
   note: string;
 };

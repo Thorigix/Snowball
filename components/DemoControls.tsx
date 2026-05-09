@@ -25,6 +25,7 @@ import {
   mockMarkShipped,
   mockConfirmDelivery,
   mockReleaseFunds,
+  mockRefundBuyer,
   resetDemoState,
   getConfirmationThreshold,
 } from "@/services/mock-data";
@@ -42,6 +43,57 @@ type Action = {
   color: string;
   run: () => Promise<{ success: boolean; error?: string }>;
 };
+
+function demoSteps(campaign?: Campaign): {
+  label: string;
+  detail: string;
+  done: boolean;
+  active: boolean;
+}[] {
+  const current = campaign ?? null;
+  const threshold = current ? getConfirmationThreshold(current.targetParticipants) : 2;
+
+  return [
+    {
+      label: "Restart demo",
+      detail: "Restore the campaign to the judge-friendly starting point.",
+      done: !!current,
+      active: !current,
+    },
+    {
+      label: "Connect wallet",
+      detail: "Open Wallet tab and connect Phantom or Solflare on web.",
+      done: !!current?.userJoined || (current?.currentParticipants ?? 0) > 0,
+      active: current?.status === "OPEN" && !current.userJoined,
+    },
+    {
+      label: "Deposit",
+      detail: "Join the group buy; funds move into escrow and seller cannot withdraw.",
+      done: (current?.currentParticipants ?? 0) >= (current?.targetParticipants ?? 1),
+      active: current?.status === "OPEN",
+    },
+    {
+      label: "Ship",
+      detail: "Seller marks the order shipped once the group is fully funded.",
+      done: ["SHIPPED", "DELIVERY_REVIEW", "RELEASED"].includes(current?.status ?? ""),
+      active: current?.status === "FUNDED",
+    },
+    {
+      label: "Confirm",
+      detail: `${threshold} buyer confirmations unlock seller release readiness.`,
+      done: (current?.confirmationsCount ?? 0) >= threshold,
+      active: current?.status === "SHIPPED" || current?.status === "DELIVERY_REVIEW",
+    },
+    {
+      label: "Release",
+      detail: "Release escrow after the threshold is met.",
+      done: current?.status === "RELEASED",
+      active:
+        current?.status !== "RELEASED" &&
+        (current?.confirmationsCount ?? 0) >= threshold,
+    },
+  ];
+}
 
 function actionsFor(c: Campaign): Action[] {
   const threshold = getConfirmationThreshold(c.targetParticipants);
@@ -87,6 +139,15 @@ function actionsFor(c: Campaign): Action[] {
     }
     case "RELEASED":
       return [];
+    case "DISPUTED":
+      return [
+        {
+          label: "Refund Buyer",
+          icon: "return-down-back-outline",
+          color: Brand.danger,
+          run: () => mockRefundBuyer(c.id),
+        },
+      ];
     default:
       return [];
   }
@@ -105,6 +166,8 @@ export default function DemoControls({ focusCampaignId }: Props) {
         ...campaigns.filter((c) => c.id !== focusCampaignId),
       ]
     : campaigns;
+  const focusedCampaign = ordered[0];
+  const steps = demoSteps(focusedCampaign);
 
   const runAction = async (campaignId: string, action: Action) => {
     if (busyId) return;
@@ -165,6 +228,55 @@ export default function DemoControls({ focusCampaignId }: Props) {
               contentContainerStyle={s.bodyContent}
               showsVerticalScrollIndicator={false}
             >
+              <View style={s.checklistCard}>
+                <View style={s.checklistHeader}>
+                  <View>
+                    <Text style={s.checklistTitle}>Guided Demo Mode</Text>
+                    <Text style={s.checklistSub}>
+                      Narrate this sequence even if a live wallet step stalls.
+                    </Text>
+                  </View>
+                  <Ionicons name="list-circle-outline" size={24} color={Brand.primary} />
+                </View>
+                <View style={s.stepList}>
+                  {steps.map((step, index) => (
+                    <View key={step.label} style={s.stepRow}>
+                      <View
+                        style={[
+                          s.stepDot,
+                          step.done && s.stepDotDone,
+                          step.active && s.stepDotActive,
+                        ]}
+                      >
+                        {step.done ? (
+                          <Ionicons name="checkmark" size={12} color={Dark.bg} />
+                        ) : (
+                          <Text
+                            style={[
+                              s.stepNum,
+                              step.active && s.stepNumActive,
+                            ]}
+                          >
+                            {index + 1}
+                          </Text>
+                        )}
+                      </View>
+                      <View style={s.stepCopy}>
+                        <Text
+                          style={[
+                            s.stepLabel,
+                            step.active && s.stepLabelActive,
+                          ]}
+                        >
+                          {step.label}
+                        </Text>
+                        <Text style={s.stepDetail}>{step.detail}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
               {ordered.map((c) => {
                 const actions = actionsFor(c);
                 const sc = StatusColors[c.status] ?? StatusColors.OPEN;
@@ -188,7 +300,9 @@ export default function DemoControls({ focusCampaignId }: Props) {
 
                     {actions.length === 0 ? (
                       <Text style={s.terminal}>
-                        Campaign complete. Reset to replay.
+                        {c.status === "REFUNDED"
+                          ? "Refund path complete. Reset to replay."
+                          : "Campaign complete. Reset to replay."}
                       </Text>
                     ) : (
                       <View style={s.actionRow}>
@@ -295,6 +409,72 @@ const s = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  checklistCard: {
+    backgroundColor: Dark.bgCard,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: `${Brand.primary}30`,
+    marginBottom: Spacing.md,
+  },
+  checklistHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  checklistTitle: {
+    color: Dark.text,
+    fontSize: Typography.body,
+    fontWeight: Typography.bold,
+  },
+  checklistSub: {
+    color: Dark.textMuted,
+    fontSize: Typography.caption,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  stepList: { gap: Spacing.sm },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+  },
+  stepDot: {
+    width: 24,
+    height: 24,
+    borderRadius: Radius.full,
+    backgroundColor: Dark.surfaceLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  stepDotDone: { backgroundColor: Brand.success },
+  stepDotActive: {
+    borderWidth: 1,
+    borderColor: Brand.primary,
+    backgroundColor: `${Brand.primary}18`,
+  },
+  stepNum: {
+    color: Dark.textMuted,
+    fontSize: Typography.tiny,
+    fontWeight: Typography.bold,
+  },
+  stepNumActive: { color: Brand.primary },
+  stepCopy: { flex: 1 },
+  stepLabel: {
+    color: Dark.textSecondary,
+    fontSize: Typography.caption,
+    fontWeight: Typography.semiBold,
+    marginBottom: 2,
+  },
+  stepLabelActive: { color: Brand.primary },
+  stepDetail: {
+    color: Dark.textMuted,
+    fontSize: Typography.tiny,
+    lineHeight: 15,
   },
 
   card: {

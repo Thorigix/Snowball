@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius } from "@/constants/theme";
-import { mockConfirmDelivery, getConfirmationThreshold } from "@/services/mock-data";
+import { mockConfirmDelivery, mockRaiseDispute, getConfirmationThreshold } from "@/services/mock-data";
 import { useCampaign } from "@/hooks/use-mock-store";
 import { goBackOrHome } from "@/hooks/use-safe-back";
 
@@ -13,6 +13,7 @@ export default function DeliveryScreen() {
   const router = useRouter();
   const campaign = useCampaign(id);
   const [confirming, setConfirming] = useState(false);
+  const [disputing, setDisputing] = useState(false);
   const [qrScanned, setQrScanned] = useState(false);
 
   const handleScanQR = () => { setQrScanned(true); };
@@ -23,10 +24,57 @@ export default function DeliveryScreen() {
     const result = await mockConfirmDelivery(campaign.id);
     setConfirming(false);
     if (result.success) {
-      router.replace({ pathname: "/success", params: { txHash: result.txHash, type: "delivery", campaignTitle: campaign.title } });
+      router.replace({
+        pathname: "/success",
+        params: {
+          txHash: result.txHash,
+          type: "delivery",
+          campaignTitle: campaign.title,
+          amount: campaign.pricePerUser,
+          token: campaign.tokenSymbol,
+          escrowPda: campaign.campaignPda ?? "",
+          status: "DELIVERY_REVIEW",
+        },
+      });
     } else {
       Alert.alert("Cannot confirm", result.error ?? "Unknown error");
     }
+  };
+
+  const handleDispute = async () => {
+    if (!campaign || disputing) return;
+    Alert.alert(
+      "Raise dispute?",
+      "This blocks seller release and opens the refund path in demo state.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Raise Dispute",
+          style: "destructive",
+          onPress: async () => {
+            setDisputing(true);
+            const result = await mockRaiseDispute(campaign.id);
+            setDisputing(false);
+            if (result.success) {
+              router.replace({
+                pathname: "/success",
+                params: {
+                  txHash: result.txHash,
+                  type: "dispute",
+                  campaignTitle: campaign.title,
+                  amount: campaign.pricePerUser,
+                  token: campaign.tokenSymbol,
+                  escrowPda: campaign.campaignPda ?? "",
+                  status: "DISPUTED",
+                },
+              });
+            } else {
+              Alert.alert("Cannot dispute", result.error ?? "Unknown error");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -85,6 +133,22 @@ export default function DeliveryScreen() {
           )}
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={s.disputeBtn}
+          onPress={handleDispute}
+          activeOpacity={0.85}
+          disabled={disputing}
+        >
+          {disputing ? (
+            <ActivityIndicator color={Brand.danger} />
+          ) : (
+            <>
+              <Ionicons name="alert-circle-outline" size={20} color={Brand.danger} />
+              <Text style={s.disputeBtnText}>Raise Dispute</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         {/* Progress */}
         {campaign && (
           <View style={s.progressCard}>
@@ -113,7 +177,7 @@ export default function DeliveryScreen() {
         <View style={s.infoCard}>
           <Ionicons name="shield-checkmark-outline" size={18} color={Brand.primary} />
           <Text style={s.infoText}>
-            If you did not receive your item, do not confirm delivery. Your funds remain safely locked in escrow.
+            If you did not receive your item, raise a dispute instead of confirming. Seller release is blocked until the dispute is refunded or resolved.
           </Text>
         </View>
 
@@ -144,6 +208,8 @@ const s = StyleSheet.create({
   confirmBtnDisabled: { backgroundColor: Dark.surface },
   confirmBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },
   confirmBtnTextDisabled: { color: Dark.textMuted },
+  disputeBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: "rgba(212, 104, 122,0.08)", paddingVertical: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: "rgba(212, 104, 122,0.3)", marginTop: -Spacing.md, marginBottom: Spacing.xl },
+  disputeBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Brand.danger },
   progressCard: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg },
   progressTitle: { fontSize: Typography.bodySmall, fontWeight: Typography.semiBold, color: Dark.text, marginBottom: Spacing.md },
   progBar: { height: 8, backgroundColor: Dark.surface, borderRadius: Radius.full, overflow: "hidden", marginBottom: Spacing.sm },

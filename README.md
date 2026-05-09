@@ -18,6 +18,29 @@ This 24-hour MVP focuses on one demo campaign:
 
 Snowball helps small groups coordinate purchases together. A group starts small, grows as more buyers join, and only releases payment when delivery conditions are satisfied.
 
+## Why Snowball Deserves Grant
+
+Snowball's hackathon thesis is narrow and demoable: consumer group-buying UX built on a reusable Solana escrow primitive, with AI explaining trust and risk to non-crypto users.
+
+The proof is not just a pitch. The app shows campaign discovery, buyer deposit, shipment state, delivery confirmation, seller release readiness, a seller dashboard, LI.FI funding, and a grant/proof page backed by devnet-oriented transaction metadata.
+
+Grant fit:
+
+- Solana gets a repeatable consumer escrow use case with campaign creation, deposits, confirmations, releases, and future refunds.
+- LI.FI fits the buyer acquisition path by letting users fund Solana escrow from other chains.
+- AI/voice explains state-dependent risk in plain language, making escrow understandable to non-crypto buyers.
+- The next milestone is a reusable escrow API/SDK, SPL USDC vaults, dispute/refund handling, and seller pilots.
+
+## P1 Trust and Proof Layer
+
+Snowball now shows the escrow product surface beyond the happy path:
+
+- Buyer dispute flow: buyers can raise a dispute during delivery review; seller release is blocked in demo state.
+- Refund path: the seller dashboard and demo controls expose a refund action for disputed campaigns.
+- USDC vault roadmap: campaign and proof screens clearly explain that devnet SOL is for demo speed and production settlement moves to SPL USDC vaults.
+- Transaction receipt: success screen shows amount, escrow PDA, buyer wallet, status, and explorer links when devnet addresses are available.
+- Seller reputation: NovaTech Istanbul and other sellers have verification, fulfilled-order count, dispute rate, and delivery SLA badges.
+
 ## Person A Scope
 
 - Solana Anchor escrow program

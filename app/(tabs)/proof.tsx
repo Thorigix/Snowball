@@ -38,10 +38,24 @@ const partnerProof = [
 ];
 
 const grantReasons = [
+  "Single thesis: consumer group-buying UX on a reusable Solana escrow primitive, with AI explaining trust and risk to non-crypto users.",
   "Turns group buying into a trust-minimized checkout flow instead of a chat + bank transfer workflow.",
   "Creates repeat Solana transactions: campaign creation, buyer deposit, delivery confirmation, release, and future refunds.",
   "Combines consumer UX with a real escrow primitive, not just a landing page or static AI wrapper.",
-  "Has a clear post-hackathon path: SPL USDC vaults, seller dashboard, dispute/refund flow, and mobile wallet adapter build.",
+];
+
+const nextMilestones = [
+  "SPL USDC vaults and production-grade token accounting.",
+  "Seller dashboard actions for shipment evidence, refunds, and dispute response.",
+  "Reusable escrow SDK/API so other group-buying apps can launch campaigns.",
+  "Mobile wallet adapter polish and partner pilots with small sellers.",
+];
+
+const usdcVaultInterfaces = [
+  "Vault mint: SPL USDC",
+  "Buyer ATA deposits",
+  "Program-owned vault PDA",
+  "Refund and release instructions",
 ];
 
 function shortHash(value?: string) {
@@ -112,7 +126,7 @@ export default function ProofScreen() {
           </View>
         </View>
 
-        <SectionTitle title="Why It Can Win" subtitle="What judges should remember after a 60-second scan." />
+        <SectionTitle title="Why Snowball Deserves Grant" subtitle="Problem, working proof, partner fit, and the next build path." />
         <View style={s.reasonList}>
           {grantReasons.map((reason, index) => (
             <View key={reason} style={s.reasonItem}>
@@ -122,6 +136,36 @@ export default function ProofScreen() {
               <Text style={s.reasonText}>{reason}</Text>
             </View>
           ))}
+        </View>
+
+        <SectionTitle title="Next Milestones" subtitle="A focused path from hackathon proof to reusable primitive." />
+        <View style={s.milestoneGrid}>
+          {nextMilestones.map((milestone) => (
+            <View key={milestone} style={s.milestoneCard}>
+              <Ionicons name="flag-outline" size={15} color={Brand.warning} />
+              <Text style={s.milestoneText}>{milestone}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={s.usdcPanel}>
+          <View style={s.usdcTop}>
+            <View>
+              <Text style={s.panelLabel}>PRODUCTION ASSET</Text>
+              <Text style={s.usdcTitle}>SPL USDC vault interface stub</Text>
+            </View>
+            <Ionicons name="cash-outline" size={22} color={Brand.solana} />
+          </View>
+          <Text style={s.usdcDesc}>
+            Devnet SOL keeps the live demo fast. Production moves the same escrow lifecycle into USDC vault accounts for stable pricing, refunds, and seller settlement.
+          </Text>
+          <View style={s.usdcChips}>
+            {usdcVaultInterfaces.map((item) => (
+              <View key={item} style={s.usdcChip}>
+                <Text style={s.usdcChipText}>{item}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <SectionTitle title="Partner Fit" subtitle="Each integration maps to a Dev3pack sponsor surface." />
@@ -358,6 +402,38 @@ const s = StyleSheet.create({
   },
   reasonNumText: { color: Brand.warning, fontSize: Typography.caption, fontWeight: Typography.bold },
   reasonText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.bodySmall, lineHeight: 20 },
+  milestoneGrid: { gap: Spacing.sm, marginBottom: Spacing.xl },
+  milestoneCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+    backgroundColor: Dark.bgCard,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Dark.border,
+    padding: Spacing.md,
+  },
+  milestoneText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
+  usdcPanel: {
+    backgroundColor: "rgba(168, 124, 219, 0.08)",
+    borderColor: "rgba(168, 124, 219, 0.24)",
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  usdcTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  usdcTitle: { color: Dark.text, fontSize: Typography.body, fontWeight: Typography.bold },
+  usdcDesc: { color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18, marginBottom: Spacing.md },
+  usdcChips: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  usdcChip: { backgroundColor: Dark.bgCard, borderColor: "rgba(168, 124, 219, 0.2)", borderWidth: 1, borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 5 },
+  usdcChipText: { color: Brand.solana, fontSize: Typography.tiny, fontWeight: Typography.semiBold },
   partnerGrid: { gap: Spacing.md, marginBottom: Spacing.xl },
   partnerCard: {
     flexDirection: "row",

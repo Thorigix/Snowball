@@ -57,7 +57,16 @@ export default function JoinCampaignScreen() {
         }
         router.replace({
           pathname: "/success",
-          params: { txHash: result.txHash, type: "deposit", campaignTitle: campaign.title },
+          params: {
+            txHash: result.txHash,
+            type: "deposit",
+            campaignTitle: campaign.title,
+            amount: campaign.pricePerUser,
+            token: campaign.tokenSymbol,
+            escrowPda: campaign.campaignPda ?? "",
+            buyerWallet: wallet.address,
+            status: "LOCKED",
+          },
         });
         return;
       }
@@ -77,7 +86,16 @@ export default function JoinCampaignScreen() {
       await refreshCampaignsFromBackend();
       router.replace({
         pathname: "/success",
-        params: { txHash: signature, type: "deposit", campaignTitle: latestCampaign.title },
+        params: {
+          txHash: signature,
+          type: "deposit",
+          campaignTitle: latestCampaign.title,
+          amount: latestCampaign.pricePerUser,
+          token: latestCampaign.tokenSymbol,
+          escrowPda: latestCampaign.campaignPda ?? "",
+          buyerWallet: wallet.address,
+          status: "LOCKED",
+        },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Transaction failed";

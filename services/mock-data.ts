@@ -428,6 +428,15 @@ export async function mockConfirmDelivery(
 export async function mockReleaseFunds(
   _campaignId: string
 ): Promise<MutationResult> {
+  const campaign = findCampaign(_campaignId);
+  if (campaign?.disputesCount) {
+    return {
+      success: false,
+      txHash: "",
+      error: "Release blocked: an open buyer dispute must be refunded or resolved first.",
+    };
+  }
+
   try {
     const result = await mutateBackendCampaign("release");
     applyBackendCampaign(result.campaign);
@@ -444,6 +453,71 @@ export async function mockReleaseFunds(
       error: error instanceof Error ? error.message : "Devnet release failed",
     };
   }
+}
+
+export async function mockRaiseDispute(
+  campaignId: string
+): Promise<MutationResult> {
+  await new Promise((r) => setTimeout(r, 500));
+  const c = findCampaign(campaignId);
+  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
+  if (!["FUNDED", "SHIPPED", "DELIVERY_REVIEW"].includes(c.status)) {
+    return {
+      success: false,
+      txHash: "",
+      error: "Disputes can be raised after funds are locked and before release.",
+    };
+  }
+
+  c.status = "DISPUTED";
+  c.disputesCount = Math.max(1, c.disputesCount + 1);
+  const txHash = fakeTxHash("raise-dispute");
+  c.txHistory = [
+    {
+      id: txHash,
+      type: "raise_dispute",
+      createdAt: new Date().toISOString(),
+      note: "Buyer raised a dispute; seller release is blocked in demo state",
+    },
+    ...(c.txHistory ?? []),
+  ];
+  notify();
+  return { success: true, txHash };
+}
+
+export async function mockRefundBuyer(
+  campaignId: string
+): Promise<MutationResult> {
+  await new Promise((r) => setTimeout(r, 500));
+  const c = findCampaign(campaignId);
+  if (!c) return { success: false, txHash: "", error: "Campaign not found" };
+  if (c.status !== "DISPUTED") {
+    return { success: false, txHash: "", error: "Refund path requires an open dispute." };
+  }
+
+  const precision = Math.max(2, c.pricePerUser.split(".")[1]?.length ?? 2);
+  c.totalDeposited = Math.max(
+    0,
+    parseFloat(c.totalDeposited) - parseFloat(c.pricePerUser)
+  ).toFixed(precision);
+  c.currentParticipants = Math.max(0, c.currentParticipants - 1);
+  c.status = "REFUNDED";
+  c.disputesCount = 0;
+  const contribution = demoContributions.find((item) => item.campaignId === c.id);
+  if (contribution) contribution.refunded = true;
+
+  const txHash = fakeTxHash("refund-buyer");
+  c.txHistory = [
+    {
+      id: txHash,
+      type: "refund_buyer",
+      createdAt: new Date().toISOString(),
+      note: `${c.pricePerUser} ${c.tokenSymbol} buyer refund recorded in demo state`,
+    },
+    ...(c.txHistory ?? []),
+  ];
+  notify();
+  return { success: true, txHash };
 }
 
 function applyLocalReset(): void {
