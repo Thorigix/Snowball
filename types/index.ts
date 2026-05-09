@@ -96,7 +96,11 @@ export type LifiRouteSummary = {
   estimatedTimeSeconds: number;
   routeId: string;
   summary?: string;
-  providerMode?: "live" | "fallback" | "missing_params";
+  providerMode?: "live";
+  tool?: string;
+  fromAmount?: string;
+  toAmount?: string;
+  transactionRequest?: Record<string, unknown>;
   requiredParams?: Record<string, string>;
 };
 
