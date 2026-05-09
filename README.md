@@ -53,3 +53,27 @@ For hackathon speed, the first demo escrow uses devnet SOL. The production direc
 ## Current Status
 
 A0 repository scaffold is being prepared.
+
+## Anchor Program Status
+
+The Snowball Anchor workspace has been initialized under `anchor/`.
+
+Program name:
+
+`snowball_escrow`
+
+Current A1 status:
+
+- Minimal Anchor workspace created
+- Placeholder `initialize` instruction added
+- Escrow logic not implemented yet
+- Campaign and contribution accounts will be added in A2
+
+Local commands:
+
+```bash
+cd anchor
+anchor build
+anchor test
+```
+
