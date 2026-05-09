@@ -7,7 +7,7 @@ export const DEMO_MODE = true;
 
 /** Backend */
 export const BACKEND_URL = __DEV__
-  ? "http://localhost:3001"
+  ? process.env.EXPO_PUBLIC_BACKEND_URL ?? "http://localhost:3001"
   : "https://snowball-api.example.com";
 
 /** Solana */

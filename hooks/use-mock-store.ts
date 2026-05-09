@@ -3,8 +3,12 @@
  * Components re-render whenever any mutation calls notify().
  */
 
-import { useSyncExternalStore } from "react";
-import { allCampaigns, subscribe } from "@/services/mock-data";
+import { useEffect, useSyncExternalStore } from "react";
+import {
+  allCampaigns,
+  refreshCampaignsFromBackend,
+  subscribe,
+} from "@/services/mock-data";
 import type { Campaign } from "@/types";
 
 let snapshotVersion = 0;
@@ -26,6 +30,10 @@ function subscribeWrapper(onStoreChange: () => void): () => void {
 }
 
 export function useCampaigns(): readonly Campaign[] {
+  useEffect(() => {
+    refreshCampaignsFromBackend();
+  }, []);
+
   return useSyncExternalStore(subscribeWrapper, getSnapshot, getSnapshot);
 }
 

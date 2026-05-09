@@ -15,6 +15,7 @@ export default function SuccessScreen() {
   const router = useRouter();
 
   const isDelivery = type === "delivery";
+  const isDemoTx = typeof txHash === "string" && txHash.startsWith("demo-");
   const title = isDelivery ? "Delivery Confirmed!" : "Deposit Successful!";
   const message = isDelivery
     ? "You confirmed delivery for this campaign. When enough buyers confirm, funds will be released to the seller."
@@ -43,16 +44,24 @@ export default function SuccessScreen() {
         {/* Transaction Info */}
         {txHash && (
           <View style={s.txCard}>
-            <Text style={s.txLabel}>TRANSACTION HASH</Text>
+            <Text style={s.txLabel}>
+              {isDemoTx ? "DEMO BACKEND EVENT ID" : "TRANSACTION HASH"}
+            </Text>
             <Text style={s.txHash} numberOfLines={1}>{txHash}</Text>
-            <TouchableOpacity
-              style={s.explorerBtn}
-              onPress={() => Linking.openURL(getExplorerTxUrl(txHash ?? ""))}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="open-outline" size={16} color={Brand.solana} />
-              <Text style={s.explorerText}>View on Solana Explorer</Text>
-            </TouchableOpacity>
+            {isDemoTx ? (
+              <Text style={s.demoTxNote}>
+                Demo mode uses backend campaign state. On-chain signing is the next integration step.
+              </Text>
+            ) : (
+              <TouchableOpacity
+                style={s.explorerBtn}
+                onPress={() => Linking.openURL(getExplorerTxUrl(txHash ?? ""))}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="open-outline" size={16} color={Brand.solana} />
+                <Text style={s.explorerText}>View on Solana Explorer</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -82,6 +91,7 @@ const s = StyleSheet.create({
   txHash: { fontSize: Typography.caption, color: Dark.text, fontFamily: "monospace", marginBottom: Spacing.md },
   explorerBtn: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   explorerText: { fontSize: Typography.bodySmall, color: Brand.solana, fontWeight: Typography.medium },
+  demoTxNote: { fontSize: Typography.caption, color: Dark.textMuted, lineHeight: 18 },
   actions: { gap: Spacing.md },
   primaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md },
   primaryBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },

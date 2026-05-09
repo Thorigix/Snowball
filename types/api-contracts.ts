@@ -4,12 +4,10 @@
  */
 
 export const API_ROUTES = {
-  campaigns: "/api/campaigns",
-  campaignDetail: (id: string) => `/api/campaigns/${id}`,
+  health: "/api/health",
+  campaign: "/api/campaign",
   lifiQuote: "/api/lifi/quote",
-  aiCampaignSummary: "/api/ai/campaign-summary",
-  aiRiskSummary: "/api/ai/risk-summary",
-  deliveryQr: (id: string) => `/api/campaigns/${id}/delivery-qr`,
+  elevenLabsSummaryAudio: "/api/elevenlabs/summary-audio",
 };
 
 export const API_BASE_URL = __DEV__

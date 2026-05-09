@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Dark, Brand, Typography, Spacing, Radius } from "@/constants/theme";
+import { getLifiQuote } from "@/services/lifi";
 import { getLifiQuoteMock } from "@/services/mock-data";
 import { LifiRouteSummary } from "@/types";
 
@@ -22,11 +23,10 @@ export default function FundingScreen() {
   const fetchRoute = async () => {
     setFetching(true);
     try {
-      const { getLifiQuote } = require("@/services/lifi");
       // Amount is hardcoded in demo, but we convert it to decimals (assuming 6 for USDC)
       const amountInUnits = (parseFloat(amount) * 1000000).toString();
       
-      const data = await getLifiQuote({
+      const route = await getLifiQuote({
         fromChain: selectedChain,
         toChain: "SOL",
         fromToken: selectedToken,
@@ -35,14 +35,12 @@ export default function FundingScreen() {
       });
 
       setRoute({
+        ...route,
         fromChain: selectedChain,
         fromToken: selectedToken,
-        toChain: "solana",
-        toToken: "SOL",
-        estimatedGasUsd: data.estimate.gasCosts[0]?.amountUsd || "0",
-        estimatedTimeSeconds: data.estimate.executionDuration || 300,
-        routeId: data.id,
-        summary: `Bridge ${amount} ${selectedToken} to Solana via ${data.tool}`,
+        summary:
+          route.summary ??
+          `Bridge ${amount} ${selectedToken} to Solana through Snowball backend`,
       });
     } catch (err) {
       console.warn("LI.FI fetch failed, falling back to mock");

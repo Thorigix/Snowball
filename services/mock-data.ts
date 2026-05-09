@@ -7,6 +7,10 @@
  */
 
 import { Campaign, Contribution, LifiRouteSummary } from "@/types";
+import {
+  fetchBackendCampaign,
+  mutateBackendCampaign,
+} from "@/services/backend";
 
 // ─── Initial Snapshots ──────────────────────────────────────────────
 // Frozen blueprints used for resetDemoState(). The live store below is a
@@ -133,6 +137,21 @@ function notify() {
   listeners.forEach((l) => l());
 }
 
+function upsertCampaign(campaign: Campaign): void {
+  const existingIndex = allCampaigns.findIndex((c) => c.id === campaign.id);
+  if (existingIndex >= 0) {
+    Object.assign(allCampaigns[existingIndex], campaign);
+  } else {
+    allCampaigns.unshift(campaign);
+  }
+}
+
+function applyBackendCampaign(campaign: Campaign): Campaign {
+  upsertCampaign(campaign);
+  notify();
+  return campaign;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function findCampaign(id: string): Campaign | undefined {
@@ -156,15 +175,25 @@ function fakeTxHash(prefix: string): string {
 // ─── Read APIs (kept stable for existing screens) ───────────────────
 
 export async function getCampaigns(): Promise<Campaign[]> {
-  await new Promise((r) => setTimeout(r, 400));
+  await refreshCampaignsFromBackend();
   return allCampaigns;
 }
 
 export async function getCampaignById(
   id: string
 ): Promise<Campaign | undefined> {
-  await new Promise((r) => setTimeout(r, 300));
+  await refreshCampaignsFromBackend();
   return findCampaign(id);
+}
+
+export async function refreshCampaignsFromBackend(): Promise<void> {
+  try {
+    const campaign = await fetchBackendCampaign();
+    upsertCampaign(campaign);
+    notify();
+  } catch (error) {
+    console.warn("[Backend] Campaign sync failed, using local demo data", error);
+  }
 }
 
 // ─── LI.FI Mock ─────────────────────────────────────────────────────
@@ -228,6 +257,18 @@ export type MutationResult = {
 export async function mockJoinCampaign(
   campaignId: string
 ): Promise<MutationResult> {
+  try {
+    const result = await mutateBackendCampaign("join");
+    applyBackendCampaign(result.campaign);
+    return {
+      success: result.success,
+      txHash: result.txHash,
+      error: result.error,
+    };
+  } catch (error) {
+    console.warn("[Backend] Join failed, using local demo mutation", error);
+  }
+
   await new Promise((r) => setTimeout(r, 1000));
   const c = findCampaign(campaignId);
   if (!c) return { success: false, txHash: "", error: "Campaign not found" };
@@ -262,6 +303,18 @@ export async function mockJoinCampaign(
 export async function mockMarkShipped(
   campaignId: string
 ): Promise<MutationResult> {
+  try {
+    const result = await mutateBackendCampaign("mark-shipped");
+    applyBackendCampaign(result.campaign);
+    return {
+      success: result.success,
+      txHash: result.txHash,
+      error: result.error,
+    };
+  } catch (error) {
+    console.warn("[Backend] Mark shipped failed, using local demo mutation", error);
+  }
+
   await new Promise((r) => setTimeout(r, 600));
   const c = findCampaign(campaignId);
   if (!c) return { success: false, txHash: "", error: "Campaign not found" };
@@ -276,6 +329,18 @@ export async function mockMarkShipped(
 export async function mockConfirmDelivery(
   campaignId: string
 ): Promise<MutationResult> {
+  try {
+    const result = await mutateBackendCampaign("confirm-delivery");
+    applyBackendCampaign(result.campaign);
+    return {
+      success: result.success,
+      txHash: result.txHash,
+      error: result.error,
+    };
+  } catch (error) {
+    console.warn("[Backend] Confirm delivery failed, using local demo mutation", error);
+  }
+
   await new Promise((r) => setTimeout(r, 800));
   const c = findCampaign(campaignId);
   if (!c) return { success: false, txHash: "", error: "Campaign not found" };
@@ -302,6 +367,18 @@ export async function mockConfirmDelivery(
 export async function mockReleaseFunds(
   campaignId: string
 ): Promise<MutationResult> {
+  try {
+    const result = await mutateBackendCampaign("release");
+    applyBackendCampaign(result.campaign);
+    return {
+      success: result.success,
+      txHash: result.txHash,
+      error: result.error,
+    };
+  } catch (error) {
+    console.warn("[Backend] Release failed, using local demo mutation", error);
+  }
+
   await new Promise((r) => setTimeout(r, 700));
   const c = findCampaign(campaignId);
   if (!c) return { success: false, txHash: "", error: "Campaign not found" };
@@ -328,6 +405,12 @@ export async function mockReleaseFunds(
 }
 
 export function resetDemoState(): void {
+  mutateBackendCampaign("reset")
+    .then((result) => applyBackendCampaign(result.campaign))
+    .catch((error) => {
+      console.warn("[Backend] Reset failed, using local reset", error);
+    });
+
   // Mutate each campaign in place so existing references stay valid.
   INITIAL_CAMPAIGNS.forEach((seed, i) => {
     if (allCampaigns[i]) Object.assign(allCampaigns[i], seed);

@@ -1,0 +1,171 @@
+import { BACKEND_URL } from "@/constants/config";
+import type { Campaign, CampaignStatus, LifiRouteSummary } from "@/types";
+
+type BackendCampaign = {
+  id: string;
+  title: string;
+  description: string;
+  sellerName: string;
+  targetBuyers: number;
+  currentBuyers: number;
+  depositSol: number;
+  depositLamports: number;
+  releaseRule: string;
+  status: CampaignStatus;
+  network: string;
+  programId: string;
+  lifiEnabled: boolean;
+  elevenLabsEnabled: boolean;
+  confirmationsCount?: number;
+  totalDepositedSol?: number;
+};
+
+type LifiQuoteRequest = {
+  fromChain: string;
+  toChain: string;
+  fromToken: string;
+  toToken: string;
+  fromAmount: string;
+  fromAddress?: string;
+  toAddress?: string;
+  slippage?: string;
+};
+
+function apiUrl(path: string): string {
+  return `${BACKEND_URL}${path}`;
+}
+
+async function requestJson<T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = 8000
+): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(apiUrl(path), {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...init?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend ${path} failed with ${response.status}`);
+    }
+
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export function mapBackendCampaign(campaign: BackendCampaign): Campaign {
+  const pricePerUser = campaign.depositSol.toFixed(2);
+  const totalRequiredAmount = (
+    campaign.depositSol * campaign.targetBuyers
+  ).toFixed(2);
+  const totalDeposited = (
+    campaign.totalDepositedSol ?? campaign.depositSol * campaign.currentBuyers
+  ).toFixed(2);
+
+  return {
+    id: campaign.id,
+    title: campaign.title,
+    description: `${campaign.description} ${campaign.releaseRule}`,
+    creatorWallet: "BACKEND_DEMO_CREATOR",
+    sellerWallet: "BACKEND_DEMO_SELLER",
+    sellerName: campaign.sellerName,
+    targetParticipants: campaign.targetBuyers,
+    currentParticipants: campaign.currentBuyers,
+    pricePerUser,
+    totalRequiredAmount,
+    totalDeposited,
+    tokenSymbol: "SOL",
+    tokenMint: "SOL_NATIVE",
+    status: campaign.status,
+    deadline: "2026-05-12T23:59:00Z",
+    deliveryDeadline: "2026-05-17T23:59:00Z",
+    confirmationsCount: campaign.confirmationsCount ?? 0,
+    disputesCount: 0,
+  };
+}
+
+export async function fetchBackendCampaign(): Promise<Campaign> {
+  const campaign = await requestJson<BackendCampaign>("/api/campaign");
+  return mapBackendCampaign(campaign);
+}
+
+type BackendMutationResult = {
+  success: boolean;
+  txHash: string;
+  campaign: BackendCampaign;
+  error?: string;
+};
+
+export async function mutateBackendCampaign(
+  action:
+    | "join"
+    | "mark-shipped"
+    | "confirm-delivery"
+    | "release"
+    | "reset"
+): Promise<{ success: boolean; txHash: string; campaign: Campaign; error?: string }> {
+  const result = await requestJson<BackendMutationResult>(`/api/campaign/${action}`, {
+    method: "POST",
+  });
+
+  return {
+    success: result.success,
+    txHash: result.txHash,
+    campaign: mapBackendCampaign(result.campaign),
+    error: result.error,
+  };
+}
+
+export async function fetchLifiQuote(
+  params: LifiQuoteRequest
+): Promise<LifiRouteSummary> {
+  const data = await requestJson<any>("/api/lifi/quote", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+  if (data.fallback) {
+    return {
+      fromChain: data.fromChain ?? params.fromChain,
+      fromToken: data.fromToken ?? params.fromToken,
+      toChain: "solana",
+      toToken: "SOL",
+      estimatedGasUsd: data.estimatedGasUsd ?? "0",
+      estimatedTimeSeconds: data.estimatedTimeSeconds ?? 300,
+      routeId: data.routeId ?? "lifi-fallback-route",
+      summary:
+        data.summary ??
+        `Fallback route from ${params.fromChain} ${params.fromToken} to Solana SOL`,
+    };
+  }
+
+  return {
+    fromChain: params.fromChain,
+    fromToken: params.fromToken,
+    toChain: "solana",
+    toToken: "SOL",
+    estimatedGasUsd: data.estimate?.gasCosts?.[0]?.amountUsd ?? "0",
+    estimatedTimeSeconds: data.estimate?.executionDuration ?? 300,
+    routeId: data.routeId ?? data.tool ?? "lifi-live-route",
+    summary: `Bridge ${params.fromToken} to Solana via ${data.tool ?? "LI.FI"}`,
+  };
+}
+
+export async function fetchElevenLabsSummary(): Promise<string> {
+  const data = await requestJson<{ text?: string }>("/api/elevenlabs/summary-audio", {
+    method: "POST",
+  });
+
+  return data.text ?? "Snowball escrow summary is unavailable.";
+}

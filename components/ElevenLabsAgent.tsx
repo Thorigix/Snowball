@@ -1,11 +1,19 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useConversation } from '@elevenlabs/react';
 import { Dark, Brand, Spacing, Radius, Shadows } from '@/constants/theme';
 import { ThemedText } from './themed-text';
-import { VoiceState } from '@/types';
+import type { Campaign } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+
+type AgentStatus = "disconnected" | "connecting" | "connected" | "speaking" | "error";
+
+type Props = {
+  focusCampaign?: Campaign;
+  onTranscript?: (role: "user" | "agent", text: string) => void;
+  onStatusChange?: (status: AgentStatus) => void;
+};
 
 /**
  * ElevenLabsAgent
@@ -14,22 +22,37 @@ import { Ionicons } from '@expo/vector-icons';
  * Compatible with simple backend services via environment variables.
  * No extra configuration needed by other developers.
  */
-export const ElevenLabsAgent: React.FC = () => {
+export const ElevenLabsAgent: React.FC<Props> = ({
+  focusCampaign,
+  onTranscript,
+  onStatusChange,
+}) => {
   const agentId = process.env.EXPO_PUBLIC_ELEVENLABS_AGENT_ID;
 
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected to ElevenLabs');
+      onStatusChange?.("connected");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs');
+      onStatusChange?.("disconnected");
     },
     onMessage: (message) => {
       console.log('Received message:', message);
+      const text =
+        typeof message === "string"
+          ? message
+          : (message as any)?.message ?? (message as any)?.text;
+      const source = (message as any)?.source;
+      if (text) {
+        onTranscript?.(source === "user" ? "user" : "agent", text);
+      }
     },
     onError: (error) => {
       console.error('ElevenLabs Error:', error);
+      onStatusChange?.("error");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     },
   });
@@ -43,15 +66,25 @@ export const ElevenLabsAgent: React.FC = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } else {
         // Request microphone permission if needed (handled by browser/app)
+        onStatusChange?.("connecting");
         await conversation.startSession({
           agentId: agentId!,
+          overrides: focusCampaign
+            ? {
+                agent: {
+                  prompt: {
+                    prompt: `The user is looking at ${focusCampaign.title}. Explain Snowball escrow clearly and reference this campaign when useful.`,
+                  },
+                },
+              }
+            : undefined,
         });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
     } catch (error) {
       console.error('Failed to toggle conversation:', error);
     }
-  }, [status, conversation, agentId]);
+  }, [status, conversation, agentId, focusCampaign, onStatusChange]);
 
   return (
     <View style={styles.container}>
@@ -103,6 +136,8 @@ export const ElevenLabsAgent: React.FC = () => {
     </View>
   );
 };
+
+export default ElevenLabsAgent;
 
 const styles = StyleSheet.create({
   container: {

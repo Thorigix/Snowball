@@ -100,7 +100,7 @@ export default function AiTabScreen() {
         <ElevenLabsAgent
           focusCampaign={focusCampaign}
           onTranscript={addTranscript}
-          onStatusChange={(s) => setAgentStatus(s)}
+          onStatusChange={(s: string) => setAgentStatus(s)}
         />
 
         {/* Quick ask chips */}
