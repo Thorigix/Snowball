@@ -97,3 +97,19 @@ Current lifecycle covered by tests:
 create_campaign → join_campaign x3 → campaign becomes Funded
 ```
 
+## A3 Delivery and Release Status
+
+A3 completes the core MVP escrow lifecycle.
+
+Implemented:
+
+- `mark_shipped`
+- `confirm_delivery`
+- `release_funds`
+
+Current on-chain lifecycle:
+
+```text
+create_campaign → join_campaign x3 → mark_shipped → confirm_delivery x2 → release_funds
+```
+

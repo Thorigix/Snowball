@@ -76,6 +76,41 @@ describe("snowball_escrow", () => {
     return contributionPda;
   };
 
+  const markShippedAs = async (seller: Keypair, campaign: PublicKey) => {
+    await program.methods
+      .markShipped()
+      .accountsPartial({
+        seller: seller.publicKey,
+        campaign,
+      })
+      .signers([seller])
+      .rpc();
+  };
+
+  const confirmDeliveryAs = async (buyer: Keypair, campaign: PublicKey) => {
+    const contributionPda = findContributionPda(campaign, buyer.publicKey);
+    await program.methods
+      .confirmDelivery()
+      .accountsPartial({
+        buyer: buyer.publicKey,
+        campaign,
+        contribution: contributionPda,
+      })
+      .signers([buyer])
+      .rpc();
+  };
+
+  const releaseFundsAs = async (seller: Keypair, campaign: PublicKey) => {
+    await program.methods
+      .releaseFunds()
+      .accountsPartial({
+        seller: seller.publicKey,
+        campaign,
+      })
+      .signers([seller])
+      .rpc();
+  };
+
   it("Initializes Snowball escrow program", async () => {
     const tx = await program.methods.initialize().rpc();
     console.log("Your transaction signature", tx);
@@ -231,5 +266,192 @@ describe("snowball_escrow", () => {
       failed = true;
     }
     expect(failed, "join on full campaign should fail").to.equal(true);
+  });
+
+  it("Completes shipped, delivery confirmation, and seller release flow", async () => {
+    const creator = Keypair.generate();
+    const seller = Keypair.generate();
+    await fundAccount(creator.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(seller.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    const campaignPda = await createCampaignFor(
+      creator,
+      seller.publicKey,
+      3,
+      50_000_000
+    );
+
+    const buyer1 = Keypair.generate();
+    const buyer2 = Keypair.generate();
+    const buyer3 = Keypair.generate();
+    await fundAccount(buyer1.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer2.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer3.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    await joinAs(buyer1, campaignPda);
+    await joinAs(buyer2, campaignPda);
+    await joinAs(buyer3, campaignPda);
+
+    let campaign = await program.account.campaign.fetch(campaignPda);
+    expect(campaign.status).to.have.property("funded");
+
+    await markShippedAs(seller, campaignPda);
+    campaign = await program.account.campaign.fetch(campaignPda);
+    expect(campaign.status).to.have.property("shipped");
+
+    await confirmDeliveryAs(buyer1, campaignPda);
+    await confirmDeliveryAs(buyer2, campaignPda);
+
+    campaign = await program.account.campaign.fetch(campaignPda);
+    expect(campaign.confirmations).to.equal(2);
+
+    const totalDeposited = campaign.totalDeposited.toNumber();
+    const sellerBalanceBefore = await provider.connection.getBalance(
+      seller.publicKey
+    );
+
+    await releaseFundsAs(seller, campaignPda);
+
+    campaign = await program.account.campaign.fetch(campaignPda);
+    expect(campaign.status).to.have.property("released");
+
+    const sellerBalanceAfter = await provider.connection.getBalance(
+      seller.publicKey
+    );
+    const delta = sellerBalanceAfter - sellerBalanceBefore;
+    // seller paid the release tx fee, so delta is slightly less than total_deposited
+    expect(delta).to.be.greaterThan(totalDeposited - 1_000_000);
+    expect(delta).to.be.lessThanOrEqual(totalDeposited);
+
+    let failed = false;
+    try {
+      await releaseFundsAs(seller, campaignPda);
+    } catch (err) {
+      failed = true;
+    }
+    expect(failed, "second release should fail").to.equal(true);
+  });
+
+  it("Rejects non-seller marking shipped", async () => {
+    const creator = Keypair.generate();
+    const seller = Keypair.generate();
+    await fundAccount(creator.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    const campaignPda = await createCampaignFor(
+      creator,
+      seller.publicKey,
+      2,
+      50_000_000
+    );
+
+    const buyer1 = Keypair.generate();
+    const buyer2 = Keypair.generate();
+    await fundAccount(buyer1.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer2.publicKey, 1 * LAMPORTS_PER_SOL);
+    await joinAs(buyer1, campaignPda);
+    await joinAs(buyer2, campaignPda);
+
+    const intruder = Keypair.generate();
+    await fundAccount(intruder.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    let failed = false;
+    try {
+      await markShippedAs(intruder, campaignPda);
+    } catch (err) {
+      failed = true;
+    }
+    expect(failed, "non-seller mark_shipped should fail").to.equal(true);
+  });
+
+  it("Rejects delivery confirmation before shipped", async () => {
+    const creator = Keypair.generate();
+    const seller = Keypair.generate();
+    await fundAccount(creator.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    const campaignPda = await createCampaignFor(
+      creator,
+      seller.publicKey,
+      2,
+      50_000_000
+    );
+
+    const buyer1 = Keypair.generate();
+    const buyer2 = Keypair.generate();
+    await fundAccount(buyer1.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer2.publicKey, 1 * LAMPORTS_PER_SOL);
+    await joinAs(buyer1, campaignPda);
+    await joinAs(buyer2, campaignPda);
+
+    let failed = false;
+    try {
+      await confirmDeliveryAs(buyer1, campaignPda);
+    } catch (err) {
+      failed = true;
+    }
+    expect(failed, "confirm before shipped should fail").to.equal(true);
+  });
+
+  it("Rejects duplicate delivery confirmation", async () => {
+    const creator = Keypair.generate();
+    const seller = Keypair.generate();
+    await fundAccount(creator.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(seller.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    const campaignPda = await createCampaignFor(
+      creator,
+      seller.publicKey,
+      2,
+      50_000_000
+    );
+
+    const buyer1 = Keypair.generate();
+    const buyer2 = Keypair.generate();
+    await fundAccount(buyer1.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer2.publicKey, 1 * LAMPORTS_PER_SOL);
+    await joinAs(buyer1, campaignPda);
+    await joinAs(buyer2, campaignPda);
+
+    await markShippedAs(seller, campaignPda);
+    await confirmDeliveryAs(buyer1, campaignPda);
+
+    let failed = false;
+    try {
+      await confirmDeliveryAs(buyer1, campaignPda);
+    } catch (err) {
+      failed = true;
+    }
+    expect(failed, "duplicate confirm should fail").to.equal(true);
+  });
+
+  it("Rejects release before enough confirmations", async () => {
+    const creator = Keypair.generate();
+    const seller = Keypair.generate();
+    await fundAccount(creator.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(seller.publicKey, 1 * LAMPORTS_PER_SOL);
+
+    const campaignPda = await createCampaignFor(
+      creator,
+      seller.publicKey,
+      2,
+      50_000_000
+    );
+
+    const buyer1 = Keypair.generate();
+    const buyer2 = Keypair.generate();
+    await fundAccount(buyer1.publicKey, 1 * LAMPORTS_PER_SOL);
+    await fundAccount(buyer2.publicKey, 1 * LAMPORTS_PER_SOL);
+    await joinAs(buyer1, campaignPda);
+    await joinAs(buyer2, campaignPda);
+
+    await markShippedAs(seller, campaignPda);
+    await confirmDeliveryAs(buyer1, campaignPda);
+
+    let failed = false;
+    try {
+      await releaseFundsAs(seller, campaignPda);
+    } catch (err) {
+      failed = true;
+    }
+    expect(failed, "release with 1 confirmation should fail").to.equal(true);
   });
 });

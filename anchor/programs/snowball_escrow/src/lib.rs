@@ -83,6 +83,89 @@ pub mod snowball_escrow {
 
         Ok(())
     }
+
+    pub fn mark_shipped(ctx: Context<MarkShipped>) -> Result<()> {
+        let campaign = &mut ctx.accounts.campaign;
+
+        require_keys_eq!(
+            ctx.accounts.seller.key(),
+            campaign.seller,
+            SnowballError::UnauthorizedSeller
+        );
+        require!(
+            campaign.status == CampaignStatus::Funded,
+            SnowballError::CampaignNotFunded
+        );
+
+        campaign.status = CampaignStatus::Shipped;
+
+        Ok(())
+    }
+
+    pub fn confirm_delivery(ctx: Context<ConfirmDelivery>) -> Result<()> {
+        let campaign = &mut ctx.accounts.campaign;
+        let contribution = &mut ctx.accounts.contribution;
+
+        require!(
+            campaign.status == CampaignStatus::Shipped,
+            SnowballError::CampaignNotShipped
+        );
+        require_keys_eq!(
+            contribution.campaign,
+            campaign.key(),
+            SnowballError::InvalidContribution
+        );
+        require_keys_eq!(
+            contribution.buyer,
+            ctx.accounts.buyer.key(),
+            SnowballError::InvalidContribution
+        );
+        require!(!contribution.confirmed, SnowballError::AlreadyConfirmed);
+
+        contribution.confirmed = true;
+        campaign.confirmations = campaign
+            .confirmations
+            .checked_add(1)
+            .ok_or(SnowballError::ArithmeticOverflow)?;
+
+        Ok(())
+    }
+
+    pub fn release_funds(ctx: Context<ReleaseFunds>) -> Result<()> {
+        let campaign = &mut ctx.accounts.campaign;
+
+        require_keys_eq!(
+            ctx.accounts.seller.key(),
+            campaign.seller,
+            SnowballError::UnauthorizedSeller
+        );
+        require!(
+            campaign.status == CampaignStatus::Shipped,
+            SnowballError::CampaignNotShipped
+        );
+        require!(
+            campaign.confirmations >= 2,
+            SnowballError::NotEnoughConfirmations
+        );
+
+        let amount = campaign.total_deposited;
+
+        let campaign_ai = campaign.to_account_info();
+        let seller_ai = ctx.accounts.seller.to_account_info();
+
+        **campaign_ai.try_borrow_mut_lamports()? = campaign_ai
+            .lamports()
+            .checked_sub(amount)
+            .ok_or(SnowballError::ArithmeticOverflow)?;
+        **seller_ai.try_borrow_mut_lamports()? = seller_ai
+            .lamports()
+            .checked_add(amount)
+            .ok_or(SnowballError::ArithmeticOverflow)?;
+
+        campaign.status = CampaignStatus::Released;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -127,6 +210,50 @@ pub struct JoinCampaign<'info> {
     pub contribution: Account<'info, Contribution>,
 
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MarkShipped<'info> {
+    pub seller: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"campaign", campaign.creator.as_ref()],
+        bump = campaign.bump,
+    )]
+    pub campaign: Account<'info, Campaign>,
+}
+
+#[derive(Accounts)]
+pub struct ConfirmDelivery<'info> {
+    pub buyer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"campaign", campaign.creator.as_ref()],
+        bump = campaign.bump,
+    )]
+    pub campaign: Account<'info, Campaign>,
+
+    #[account(
+        mut,
+        seeds = [b"contribution", campaign.key().as_ref(), buyer.key().as_ref()],
+        bump = contribution.bump,
+    )]
+    pub contribution: Account<'info, Contribution>,
+}
+
+#[derive(Accounts)]
+pub struct ReleaseFunds<'info> {
+    #[account(mut)]
+    pub seller: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"campaign", campaign.creator.as_ref()],
+        bump = campaign.bump,
+    )]
+    pub campaign: Account<'info, Campaign>,
 }
 
 #[account]
@@ -183,4 +310,16 @@ pub enum SnowballError {
     BuyerCannotBeSeller,
     #[msg("Arithmetic overflow")]
     ArithmeticOverflow,
+    #[msg("Only the seller can perform this action")]
+    UnauthorizedSeller,
+    #[msg("Campaign is not funded")]
+    CampaignNotFunded,
+    #[msg("Campaign is not shipped")]
+    CampaignNotShipped,
+    #[msg("Contribution does not match campaign or buyer")]
+    InvalidContribution,
+    #[msg("Delivery already confirmed by this buyer")]
+    AlreadyConfirmed,
+    #[msg("Not enough delivery confirmations to release funds")]
+    NotEnoughConfirmations,
 }
