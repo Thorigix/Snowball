@@ -65,6 +65,40 @@ const localImpact = [
   "Student trips and global hub meetups can collect deposits while keeping seller release rule-based and auditable.",
 ];
 
+const dev3packFit = [
+  {
+    prize: "Best Solana Consumer App",
+    why: "A real devnet escrow flow turns a familiar student group-buy workflow into repeat Solana transactions.",
+    proof: "Show wallet deposit, escrow PDA, and Explorer link.",
+    icon: "diamond-outline" as const,
+  },
+  {
+    prize: "Best AI Product Layer",
+    why: "AI is used where buyers need it: explaining escrow state, release risk, and dispute status in plain language.",
+    proof: "Open AI Risk Report, then ask the AI tab why seller cannot withdraw.",
+    icon: "sparkles-outline" as const,
+  },
+  {
+    prize: "Best Partner Integration Story",
+    why: "Solana escrow, LI.FI funding preview, ElevenLabs voice path, and mobile-first UX each map to a sponsor surface.",
+    proof: "Use Partner Fit cards and Live/Fallback/Demo-only badges.",
+    icon: "ribbon-outline" as const,
+  },
+  {
+    prize: "Most Grant-Ready",
+    why: "Scope is honest: working devnet escrow now, with USDC vaults and on-chain dispute/refund as explicit milestones.",
+    proof: "Show Claims We Do Not Make and Next Milestones.",
+    icon: "document-text-outline" as const,
+  },
+];
+
+const judgeChecklist = [
+  "Can a judge run it in 5 minutes?",
+  "Does the demo show a real on-chain signature?",
+  "Are fallback integrations labeled honestly?",
+  "Is the next milestone fundable and specific?",
+];
+
 function shortHash(value?: string) {
   if (!value) return "Unavailable";
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
@@ -178,6 +212,35 @@ export default function ProofScreen() {
                 <Text style={s.reasonNumText}>{index + 1}</Text>
               </View>
               <Text style={s.reasonText}>{reason}</Text>
+            </View>
+          ))}
+        </View>
+
+        <SectionTitle title="Dev3pack Prize Fit" subtitle="Where Snowball should pull judges in during scoring." />
+        <View style={s.fitGrid}>
+          {dev3packFit.map((item) => (
+            <View key={item.prize} style={s.fitCard}>
+              <View style={s.fitTop}>
+                <View style={s.fitIcon}>
+                  <Ionicons name={item.icon} size={16} color={Brand.primary} />
+                </View>
+                <Text style={s.fitPrize}>{item.prize}</Text>
+              </View>
+              <Text style={s.fitWhy}>{item.why}</Text>
+              <Text style={s.fitProof}>{item.proof}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={s.judgePanel}>
+          <View style={s.judgeTop}>
+            <Ionicons name="clipboard-outline" size={18} color={Brand.warning} />
+            <Text style={s.judgeTitle}>Judge Pull-In Checklist</Text>
+          </View>
+          {judgeChecklist.map((item) => (
+            <View key={item} style={s.judgeRow}>
+              <Ionicons name="checkmark-circle-outline" size={15} color={Brand.success} />
+              <Text style={s.judgeText}>{item}</Text>
             </View>
           ))}
         </View>
@@ -505,6 +568,39 @@ const s = StyleSheet.create({
   },
   reasonNumText: { color: Brand.warning, fontSize: Typography.caption, fontWeight: Typography.bold },
   reasonText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.bodySmall, lineHeight: 20 },
+  fitGrid: { gap: Spacing.md, marginBottom: Spacing.xl },
+  fitCard: {
+    backgroundColor: Dark.bgCard,
+    borderColor: Dark.border,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+  },
+  fitTop: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },
+  fitIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.full,
+    backgroundColor: `${Brand.primary}14`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fitPrize: { flex: 1, color: Dark.text, fontSize: Typography.bodySmall, fontWeight: Typography.bold },
+  fitWhy: { color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
+  fitProof: { color: Brand.warning, fontSize: Typography.caption, lineHeight: 18, marginTop: Spacing.sm, fontWeight: Typography.semiBold },
+  judgePanel: {
+    backgroundColor: `${Brand.warning}10`,
+    borderColor: `${Brand.warning}35`,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.xxl,
+    gap: Spacing.sm,
+  },
+  judgeTop: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  judgeTitle: { color: Dark.text, fontSize: Typography.bodySmall, fontWeight: Typography.bold },
+  judgeRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  judgeText: { flex: 1, color: Dark.textSecondary, fontSize: Typography.caption, lineHeight: 18 },
   impactPanel: {
     backgroundColor: Dark.bgCard,
     borderRadius: Radius.lg,

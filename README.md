@@ -49,7 +49,30 @@ npm run demo:devnet
 - `submission/dev3pack-submission.md` contains the project submission copy.
 - `submission/judge-quickstart.md` contains a 5-minute judge setup path.
 - `submission/demo-video-shotlist.md` contains the recording sequence.
+- `submission/dev3pack-feature-opportunities.md` lists the next features that can pull Dev3pack judges in.
+- `submission/screenshots.md` lists the screenshots and captions needed for a polished submission.
+- `submission/submission-pack.html` is a single-page copy/paste judging packet.
 - `handoff/a6-devnet-demo-flow.md` captures a sample full devnet lifecycle run.
+
+## Dev3pack Prize Fit
+
+- Solana Consumer App: a familiar group-buying use case backed by real devnet escrow.
+- AI Product Layer: AI explains escrow safety, seller release risk, and dispute state in plain language.
+- Partner Integration Story: Solana, LI.FI, ElevenLabs, and mobile-first UX are each visible without hiding fallback modes.
+- Grant Ready: current live scope and next milestones are explicit, so judges can trust the roadmap.
+
+## Recommended Demo Order
+
+1. Proof tab -> Demo Preflight.
+2. Home -> Restart Demo.
+3. Wallet -> Connect Wallet -> Get Devnet SOL.
+4. RTX 5080 campaign -> Join Campaign -> Sign Deposit.
+5. Success receipt -> open Explorer.
+6. AI tab -> ask why the seller cannot withdraw yet.
+7. LI.FI screen -> show quote preview vs live quote attempt.
+8. Seller Dashboard or Demo Controls -> shipment, confirmations, release.
+9. Dispute/refund path -> explain demo-only status.
+10. Proof tab -> Dev3pack Prize Fit, Partner Fit, and Transaction Trail.
 
 ## Commands
 
