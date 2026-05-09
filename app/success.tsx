@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Dark.bg },
   content: { flex: 1, justifyContent: "center", padding: Spacing.xxl },
   iconWrap: { alignItems: "center", marginBottom: Spacing.xl },
-  iconCircle: { width: 100, height: 100, borderRadius: Radius.full, backgroundColor: "rgba(0,229,160,0.1)", justifyContent: "center", alignItems: "center" },
+  iconCircle: { width: 100, height: 100, borderRadius: Radius.full, backgroundColor: "rgba(91, 181, 162,0.1)", justifyContent: "center", alignItems: "center" },
   title: { fontSize: Typography.h2, fontWeight: Typography.bold, color: Dark.text, textAlign: "center", marginBottom: Spacing.md },
   message: { fontSize: Typography.bodySmall, color: Dark.textSecondary, textAlign: "center", lineHeight: 22, marginBottom: Spacing.xl },
   campaignBadge: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Dark.bgCard, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.full, alignSelf: "center", borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },

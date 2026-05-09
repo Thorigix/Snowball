@@ -42,7 +42,7 @@ const s = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: Radius.full, backgroundColor: Dark.bgCard, justifyContent: "center", alignItems: "center" },
   topTitle: { flex: 1, textAlign: "center", fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.text },
   content: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xxl },
-  iconWrap: { width: 80, height: 80, borderRadius: Radius.full, backgroundColor: "rgba(0,229,160,0.1)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.xl },
+  iconWrap: { width: 80, height: 80, borderRadius: Radius.full, backgroundColor: "rgba(91, 181, 162,0.1)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.xl },
   title: { fontSize: Typography.h2, fontWeight: Typography.bold, color: Dark.text, marginBottom: Spacing.md },
   desc: { fontSize: Typography.bodySmall, color: Dark.textSecondary, textAlign: "center", lineHeight: 22, marginBottom: Spacing.xxl },
   btn: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.lg, borderRadius: Radius.md },

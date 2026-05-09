@@ -123,7 +123,7 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: Spacing.sm },
   rowLabel: { fontSize: Typography.bodySmall, color: Dark.textMuted },
   rowValue: { fontSize: Typography.bodySmall, color: Dark.text, fontWeight: Typography.medium },
-  trustCard: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md, backgroundColor: "rgba(0,229,160,0.06)", borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: "rgba(0,229,160,0.15)", marginBottom: Spacing.xl },
+  trustCard: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md, backgroundColor: "rgba(91, 181, 162,0.06)", borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.15)", marginBottom: Spacing.xl },
   trustText: { flex: 1, fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 18 },
   depositBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, backgroundColor: Brand.primary, paddingVertical: Spacing.lg, borderRadius: Radius.md, marginBottom: Spacing.lg },
   depositBtnText: { fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.textInverse },

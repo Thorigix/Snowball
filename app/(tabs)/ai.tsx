@@ -105,11 +105,11 @@ export default function AiTabScreen() {
     } else {
       response =
         "I can help you understand:\n\n" +
-        "• 🛡️ How Solana escrow protects your funds\n" +
-        "• 📦 Campaign details and status\n" +
-        "• 🔗 LI.FI cross-chain bridge routes\n" +
-        "• ⚠️ Seller risk assessment\n" +
-        "• 🚚 What happens if delivery fails\n\n" +
+        "- How Solana escrow protects your funds\n" +
+        "- Campaign details and status\n" +
+        "- LI.FI cross-chain bridge routes\n" +
+        "- Seller risk assessment\n" +
+        "- What happens if delivery fails\n\n" +
         "Try asking one of these questions!";
     }
 
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radius.md,
-    backgroundColor: "rgba(0, 229, 160, 0.1)",
+    backgroundColor: "rgba(91, 181, 162, 0.1)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -295,11 +295,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radius.full,
-    backgroundColor: "rgba(0, 229, 160, 0.1)",
+    backgroundColor: "rgba(91, 181, 162, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(0, 229, 160, 0.2)",
+    borderColor: "rgba(91, 181, 162, 0.2)",
   },
 
   // Messages
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: Radius.full,
-    backgroundColor: "rgba(0, 229, 160, 0.1)",
+    backgroundColor: "rgba(91, 181, 162, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: Spacing.sm,

@@ -1,88 +1,88 @@
 /**
  * Snowball Design System
- * Premium dark-mode first tema — crypto/fintech esintili
+ * Dark theme — clean, muted, professional tones
  */
 
 import { Platform } from "react-native";
 
-// ─── Brand Colors ────────────────────────────────────────────────────
+// ─── Brand Colors (muted, professional) ─────────────────────────────
 export const Brand = {
-  /** Ana neon accent — etkileşim ve CTA */
-  primary: "#00E5A0",
-  primaryDark: "#00C48C",
-  primaryLight: "#33FFB5",
+  /** Ana accent — soft teal */
+  primary: "#5BB5A2",
+  primaryDark: "#4A9A89",
+  primaryLight: "#7DCBB9",
 
-  /** İkincil — bilgilendirme ve badge */
-  secondary: "#6C63FF",
-  secondaryDark: "#5A52E0",
-  secondaryLight: "#8B84FF",
+  /** İkincil — muted indigo */
+  secondary: "#7B8CDE",
+  secondaryDark: "#6474C4",
+  secondaryLight: "#9BA8E8",
 
-  /** Uyarı/hata */
-  danger: "#FF4D6A",
-  dangerDark: "#E0364F",
+  /** Hata / uyarı */
+  danger: "#D4687A",
+  dangerDark: "#B85565",
 
   /** Başarı */
-  success: "#00E5A0",
+  success: "#5BB5A2",
 
   /** Uyarı */
-  warning: "#FFB547",
+  warning: "#D4A44E",
 
   /** Solana brand */
-  solana: "#9945FF",
-  solanaDark: "#7B30E0",
+  solana: "#A87CDB",
+  solanaDark: "#8E64C0",
 
   /** LI.FI brand */
-  lifi: "#BF5AF2",
+  lifi: "#9B7FCC",
 };
 
-// ─── Dark Theme (Primary) ───────────────────────────────────────────
+// ─── Dark Theme ─────────────────────────────────────────────────────
 export const Dark = {
   /** Backgrounds */
-  bg: "#0A0E14",
-  bgElevated: "#111822",
-  bgCard: "#161F2C",
-  bgCardHover: "#1C2738",
-  bgInput: "#1A2332",
-  bgOverlay: "rgba(0, 0, 0, 0.65)",
+  bg: "#0F1114",
+  bgElevated: "#16191E",
+  bgCard: "#1C2027",
+  bgCardHover: "#22272F",
+  bgInput: "#1A1E25",
+  bgOverlay: "rgba(0, 0, 0, 0.55)",
 
   /** Surfaces */
-  surface: "#1A2332",
-  surfaceLight: "#222F40",
-  surfaceBorder: "#2A3A4E",
+  surface: "#1E2229",
+  surfaceLight: "#262B33",
+  surfaceBorder: "#2E343E",
 
   /** Text */
-  text: "#F0F4F8",
-  textSecondary: "#8B9CB5",
-  textMuted: "#5A6B80",
-  textInverse: "#0A0E14",
+  text: "#E8EAED",
+  textSecondary: "#9AA0AB",
+  textMuted: "#636B78",
+  textInverse: "#0F1114",
 
   /** Borders */
-  border: "#1E2D3D",
-  borderLight: "#2A3A4E",
-  borderFocus: Brand.primary,
+  border: "#252A33",
+  borderLight: "#2E343E",
+  borderFocus: "#5BB5A2",
 };
 
-// ─── Light Theme (Secondary) ────────────────────────────────────────
+// ─── Light Theme (fallback) ─────────────────────────────────────────
 export const Light = {
-  bg: "#F8FAFE",
+  bg: "#F6F7F9",
   bgElevated: "#FFFFFF",
   bgCard: "#FFFFFF",
-  bgCardHover: "#F0F4F8",
-  bgInput: "#F0F4F8",
-  bgOverlay: "rgba(0, 0, 0, 0.3)",
+  bgCardHover: "#F0F2F5",
+  bgInput: "#F0F2F5",
+  bgOverlay: "rgba(0, 0, 0, 0.25)",
 
   surface: "#FFFFFF",
-  surfaceLight: "#F0F4F8",
-  surfaceBorder: "#E2E8F0",
+  surfaceLight: "#F0F2F5",
+  surfaceBorder: "#E0E3E8",
 
-  text: "#0F172A",
-  textSecondary: "#475569",
-  textMuted: "#94A3B8",
+  text: "#111318",
+  textSecondary: "#555B66",
+  textMuted: "#8E94A0",
   textInverse: "#FFFFFF",
 
-  border: "#E2E8F0",
-  borderLight: "#F1F5F9",
-  borderFocus: Brand.primary,
+  border: "#E0E3E8",
+  borderLight: "#EBEDF0",
+  borderFocus: "#5BB5A2",
 };
 
 // ─── Typography ──────────────────────────────────────────────────────
@@ -93,7 +93,6 @@ export const Typography = {
     default: "system-ui",
   }),
 
-  /** Font sizes */
   h1: 32,
   h2: 24,
   h3: 20,
@@ -103,7 +102,6 @@ export const Typography = {
   caption: 12,
   tiny: 10,
 
-  /** Font weights */
   bold: "700" as const,
   semiBold: "600" as const,
   medium: "500" as const,
@@ -136,41 +134,41 @@ export const Radius = {
 export const Shadows = {
   card: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   elevated: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   subtle: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
 };
 
-// ─── Status Colors ───────────────────────────────────────────────────
+// ─── Status Colors (muted) ──────────────────────────────────────────
 export const StatusColors: Record<string, { bg: string; text: string }> = {
-  OPEN: { bg: "#1A3A2A", text: "#00E5A0" },
-  FUNDED: { bg: "#1A2A4A", text: "#6C63FF" },
-  SHIPPED: { bg: "#2A2A1A", text: "#FFB547" },
-  DELIVERY_REVIEW: { bg: "#2A2A1A", text: "#FFB547" },
-  RELEASED: { bg: "#1A3A2A", text: "#00E5A0" },
-  REFUNDED: { bg: "#2A1A1A", text: "#FF4D6A" },
-  DISPUTED: { bg: "#2A1A1A", text: "#FF4D6A" },
-  CANCELLED: { bg: "#1A1A1A", text: "#5A6B80" },
-  DRAFT: { bg: "#1A1A1A", text: "#5A6B80" },
+  OPEN: { bg: "#1A2822", text: "#5BB5A2" },
+  FUNDED: { bg: "#1C2238", text: "#7B8CDE" },
+  SHIPPED: { bg: "#262218", text: "#D4A44E" },
+  DELIVERY_REVIEW: { bg: "#262218", text: "#D4A44E" },
+  RELEASED: { bg: "#1A2822", text: "#5BB5A2" },
+  REFUNDED: { bg: "#261C20", text: "#D4687A" },
+  DISPUTED: { bg: "#261C20", text: "#D4687A" },
+  CANCELLED: { bg: "#1A1A1E", text: "#636B78" },
+  DRAFT: { bg: "#1A1A1E", text: "#636B78" },
 };
 
-// ─── Legacy Compat (for expo default components) ─────────────────────
+// ─── Legacy Compat ───────────────────────────────────────────────────
 export const Colors = {
   light: {
     text: Light.text,

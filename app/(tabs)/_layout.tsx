@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   activeIconWrap: {
-    backgroundColor: "rgba(0, 229, 160, 0.12)",
+    backgroundColor: "rgba(91, 181, 162, 0.12)",
     borderRadius: Radius.sm,
     padding: 4,
   },

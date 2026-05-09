@@ -50,7 +50,7 @@ export default function DeliveryScreen() {
           <View style={s.statusIcon}>
             <Ionicons name={qrScanned ? "checkmark-circle" : "cube-outline"} size={40} color={qrScanned ? Brand.success : Brand.warning} />
           </View>
-          <Text style={s.statusTitle}>{qrScanned ? "QR Verified ✓" : "Awaiting Confirmation"}</Text>
+          <Text style={s.statusTitle}>{qrScanned ? "QR Verified" : "Awaiting Confirmation"}</Text>
           <Text style={s.statusDesc}>
             {qrScanned
               ? "Delivery code verified. You can now confirm delivery."
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
   topTitle: { flex: 1, textAlign: "center", fontSize: Typography.body, fontWeight: Typography.semiBold, color: Dark.text },
   content: { padding: Spacing.xl },
   statusCard: { alignItems: "center", backgroundColor: Dark.bgCard, borderRadius: Radius.xl, padding: Spacing.xxl, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.xl },
-  statusIcon: { width: 72, height: 72, borderRadius: Radius.full, backgroundColor: "rgba(0,229,160,0.08)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.md },
+  statusIcon: { width: 72, height: 72, borderRadius: Radius.full, backgroundColor: "rgba(91, 181, 162,0.08)", justifyContent: "center", alignItems: "center", marginBottom: Spacing.md },
   statusTitle: { fontSize: Typography.h3, fontWeight: Typography.bold, color: Dark.text, marginBottom: Spacing.sm },
   statusDesc: { fontSize: Typography.bodySmall, color: Dark.textSecondary, textAlign: "center", lineHeight: 20 },
   card: { backgroundColor: Dark.bgCard, borderRadius: Radius.lg, padding: Spacing.lg, borderWidth: 1, borderColor: Dark.border, marginBottom: Spacing.lg },
@@ -139,6 +139,6 @@ const s = StyleSheet.create({
   progBar: { height: 8, backgroundColor: Dark.surface, borderRadius: Radius.full, overflow: "hidden", marginBottom: Spacing.sm },
   progFill: { height: "100%", backgroundColor: Brand.primary, borderRadius: Radius.full },
   progressDesc: { fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 18 },
-  infoCard: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.sm, padding: Spacing.lg, backgroundColor: "rgba(0,229,160,0.06)", borderRadius: Radius.md, borderWidth: 1, borderColor: "rgba(0,229,160,0.15)" },
+  infoCard: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.sm, padding: Spacing.lg, backgroundColor: "rgba(91, 181, 162,0.06)", borderRadius: Radius.md, borderWidth: 1, borderColor: "rgba(91, 181, 162,0.15)" },
   infoText: { flex: 1, fontSize: Typography.caption, color: Dark.textSecondary, lineHeight: 18 },
 });
