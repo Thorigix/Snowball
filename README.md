@@ -172,3 +172,44 @@ ELEVENLABS_MODEL_ID=eleven_multilingual_v2
 
 The API key is never logged and never returned in responses. Do not commit any `.env` file.
 
+## A6 LI.FI Quote Status
+
+A6 improves the Snowball backend LI.FI endpoint.
+
+Endpoint:
+
+```http
+POST /api/lifi/quote
+```
+
+Behavior:
+
+- If enough quote parameters are provided, the backend proxies a live LI.FI quote request to `https://li.quest/v1/quote`.
+- If quote parameters are missing or LI.FI fails, the backend returns a safe fallback route for the demo.
+- `LIFI_API_KEY` is optional and only used server-side.
+- No LI.FI key is exposed to the mobile app.
+
+Required quote fields for a live LI.FI request: `fromChain`, `toChain`, `fromToken`, `toToken`, `fromAmount`, `fromAddress`. The optional `toAddress` is forwarded when present. Slippage defaults to `0.005` and the integrator defaults to `LIFI_INTEGRATOR` or `snowball`.
+
+Environment variables (see `.env.example`):
+
+```text
+LIFI_API_KEY=
+LIFI_INTEGRATOR=snowball
+```
+
+Build and test:
+
+```bash
+cd backend
+npm run build
+```
+
+Then start the backend and test the fallback path:
+
+```bash
+curl -X POST http://localhost:3001/api/lifi/quote \
+  -H "Content-Type: application/json" \
+  -d '{"fromChain":"base","fromToken":"USDC","toChain":"solana","toToken":"SOL","amount":"10"}'
+```
+
