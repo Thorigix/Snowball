@@ -32,7 +32,12 @@ yarn-error.*
 
 # local env files
 .env
+<<<<<<< HEAD
 .env*.local
+=======
+.env.local
+.env.*.local
+>>>>>>> feature/snowball-anchor-backend
 
 # typescript
 *.tsbuildinfo
@@ -43,6 +48,7 @@ app-example
 /ios
 /android
 
+<<<<<<< HEAD
 
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
@@ -90,6 +96,8 @@ app-example
 /ios
 /android
 
+=======
+>>>>>>> feature/snowball-anchor-backend
 .claude
 
 logs/
