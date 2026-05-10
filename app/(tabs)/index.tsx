@@ -9,6 +9,8 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  Image,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +22,8 @@ import { resetDemoState } from "@/services/mock-data";
 import DemoControls from "@/components/DemoControls";
 
 const { width } = Dimensions.get("window");
+const snowballLogo = require("../../assets/brand/snowball-logo.png");
+const snowballBanner = require("../../assets/brand/snowball-banner.png");
 
 export default function CampaignFeedScreen() {
   const router = useRouter();
@@ -89,9 +93,12 @@ export default function CampaignFeedScreen() {
       >
         {/* Header */}
         <View style={s.header}>
-          <View>
-            <Text style={s.greeting}>Welcome back</Text>
-            <Text style={s.appName}>Snowball</Text>
+          <View style={s.brandLockup}>
+            <Image source={snowballLogo} style={s.logoMark} accessibilityIgnoresInvertColors />
+            <View>
+              <Text style={s.greeting}>Welcome back</Text>
+              <Text style={s.appName}>Snowball</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={[s.restartBtn, resetting && s.restartBtnBusy]}
@@ -110,7 +117,13 @@ export default function CampaignFeedScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={s.submissionHero}>
+        <ImageBackground
+          source={snowballBanner}
+          style={s.submissionHero}
+          imageStyle={s.heroBannerImage}
+          accessibilityIgnoresInvertColors
+        >
+          <View style={s.heroOverlay} />
           <View style={s.heroTopRow}>
             <View style={s.heroCopy}>
               <Text style={s.heroKicker}>Submission screenshot mode</Text>
@@ -132,7 +145,7 @@ export default function CampaignFeedScreen() {
             </View>
             <Text style={s.heroProofMetric}>{liveProofText}</Text>
           </View>
-        </View>
+        </ImageBackground>
 
         {/* Balance Card */}
         <View style={s.balanceSection}>
@@ -320,6 +333,17 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 28,
   },
+  brandLockup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flexShrink: 1,
+  },
+  logoMark: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+  },
   greeting: { fontSize: 13, color: Dark.textMuted, marginBottom: 2 },
   appName: { fontSize: 26, fontWeight: "700", color: Dark.text, letterSpacing: -0.5 },
   avatarBtn: {
@@ -356,6 +380,16 @@ const s = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.xxl,
+    overflow: "hidden",
+    position: "relative",
+  },
+  heroBannerImage: {
+    borderRadius: Radius.lg,
+    opacity: 0.92,
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 17, 20, 0.42)",
   },
   heroTopRow: {
     flexDirection: "row",
