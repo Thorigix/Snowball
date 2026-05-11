@@ -1,20 +1,17 @@
-import * as express from "express";
-import * as cors from "cors";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-// ─── Inline route handlers (avoids cross-project TS import issues) ──────
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Health
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "snowball-backend", project: "Snowball" });
 });
 
 // Campaign — returns demo data (devnet escrow requires a wallet keypair)
-app.get("/api/campaign", (_req, res) => {
+app.get("/api/campaign", (req, res) => {
   res.json({
     id: "campaign-rtx-5080-demo",
     title: "RTX 5080 Group Buy",
@@ -25,7 +22,7 @@ app.get("/api/campaign", (_req, res) => {
     targetBuyers: 3,
     currentBuyers: 2,
     depositSol: 0.05,
-    depositLamports: 50_000_000,
+    depositLamports: 50000000,
     releaseRule: "2 of 3 delivery confirmations release funds to the seller",
     status: "OPEN",
     network: "devnet",
@@ -43,7 +40,7 @@ app.get("/api/campaign", (_req, res) => {
 });
 
 // Demo preflight
-app.get("/api/demo/preflight", (_req, res) => {
+app.get("/api/demo/preflight", (req, res) => {
   res.json({
     backendOk: true,
     programId: "2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss",
@@ -60,7 +57,7 @@ app.get("/api/demo/preflight", (_req, res) => {
 });
 
 // Mutation stubs (join, ship, confirm, release, reset)
-const mutationStub = (_req: express.Request, res: express.Response) => {
+const mutationStub = (req, res) => {
   res.status(503).json({
     success: false,
     error: "Devnet mutations require ANCHOR_WALLET_JSON env var. Configure it in Vercel dashboard.",
@@ -75,21 +72,18 @@ app.post("/api/campaign/reset", mutationStub);
 app.post("/api/campaign/fund-wallet", mutationStub);
 
 // LI.FI route stub
-app.post("/api/lifi/quote", (_req, res) => {
+app.post("/api/lifi/quote", (req, res) => {
   res.status(503).json({ error: "LI.FI bridge requires server-side configuration." });
 });
 
 // ElevenLabs stub
-app.post("/api/elevenlabs/signed-url", (_req, res) => {
+app.post("/api/elevenlabs/signed-url", (req, res) => {
   res.status(503).json({ error: "ElevenLabs requires server-side API key." });
 });
 
 // Catch-all 404
-app.use("/api/*", (_req, res) => {
+app.use("/api/*", (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
 
-// ─── Vercel handler ─────────────────────────────────────────────────────
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  return (app as any)(req, res);
-}
+module.exports = app;
