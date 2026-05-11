@@ -8,6 +8,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/:match*",
+      "destination": "/api?__path=/:match*"
+    },
+    {
       "source": "/campaign/:id",
       "destination": "/campaign/[id].html"
     },
