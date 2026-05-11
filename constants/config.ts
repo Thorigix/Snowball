@@ -6,8 +6,9 @@
 export const DEMO_MODE = true;
 
 /** Backend */
+const configuredBackendUrl = process.env.EXPO_PUBLIC_BACKEND_URL?.trim();
 export const BACKEND_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL ?? "http://localhost:3001";
+  configuredBackendUrl || (__DEV__ ? "http://localhost:3001" : "");
 
 /** Solana */
 export const SOLANA_NETWORK = "devnet";

@@ -1,13 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { createRequire } from "module";
-
-const requireFromAnchor = createRequire(
-  path.resolve(__dirname, "../../anchor/package.json")
-);
-
-const {
+import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
@@ -16,7 +10,7 @@ const {
   Transaction,
   TransactionInstruction,
   sendAndConfirmTransaction,
-} = requireFromAnchor("@solana/web3.js") as any;
+} from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey("2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss");
 const RPC_URL = process.env.ANCHOR_PROVIDER_URL || "https://api.devnet.solana.com";
@@ -105,6 +99,12 @@ let runtime: Runtime | null = null;
 let initPromise: Promise<Runtime> | null = null;
 
 function loadPayer(): any {
+  const walletJson = process.env.ANCHOR_WALLET_JSON;
+  if (walletJson && walletJson.trim().length > 0) {
+    const secret = JSON.parse(walletJson);
+    return Keypair.fromSecretKey(Uint8Array.from(secret));
+  }
+
   const walletPath = (process.env.ANCHOR_WALLET || "~/.config/solana/id.json").replace(
     "~",
     os.homedir()
