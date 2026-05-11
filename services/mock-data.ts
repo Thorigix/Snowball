@@ -27,13 +27,13 @@ const initialDemoCampaign: Campaign = {
   sellerWallet: "SELLER_WALLET_PLACEHOLDER",
   sellerName: "NovaTech Istanbul",
   targetParticipants: 3,
-  currentParticipants: 2,
+  currentParticipants: 3,
   pricePerUser: "0.05",
   totalRequiredAmount: "0.15",
-  totalDeposited: "0.10",
+  totalDeposited: "0.15",
   tokenSymbol: "SOL",
   tokenMint: "SOL_NATIVE",
-  status: "OPEN",
+  status: "FUNDED",
   deadline: "2026-05-12T23:59:00Z",
   deliveryDeadline: "2026-05-17T23:59:00Z",
   confirmationsCount: 0,
@@ -341,7 +341,7 @@ export async function mockJoinCampaign(
   if (campaign?.userJoined) {
     return { success: false, txHash: "", error: "You already joined this campaign" };
   }
-  if (campaign && campaign.id !== "campaign-rtx-5080-demo" && !campaign.campaignPda) {
+  if (campaign && !campaign.campaignPda) {
     return joinLocalCampaign(campaignId);
   }
 
