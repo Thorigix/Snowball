@@ -109,8 +109,15 @@ function loadPayer(): any {
     "~",
     os.homedir()
   );
-  const secret = JSON.parse(fs.readFileSync(walletPath, "utf8"));
-  return Keypair.fromSecretKey(Uint8Array.from(secret));
+  try {
+    const secret = JSON.parse(fs.readFileSync(walletPath, "utf8"));
+    return Keypair.fromSecretKey(Uint8Array.from(secret));
+  } catch {
+    throw new Error(
+      "Solana wallet not configured. Set ANCHOR_WALLET_JSON env var with the keypair JSON array, " +
+      "or ensure ANCHOR_WALLET points to a valid keypair file."
+    );
+  }
 }
 
 function findCampaignPda(creator: any): any {

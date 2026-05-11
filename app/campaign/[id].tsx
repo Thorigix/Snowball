@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator,
 } from "react-native";
@@ -66,6 +66,8 @@ export default function CampaignDetailScreen() {
   const router = useRouter();
   const campaign = useCampaign(id);
   const [disputing, setDisputing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   if (!campaign) return (
     <SafeAreaView style={s.container}>
@@ -73,9 +75,15 @@ export default function CampaignDetailScreen() {
     </SafeAreaView>
   );
 
+
+
   const prog = campaign.targetParticipants > 0 ? campaign.currentParticipants / campaign.targetParticipants : 0;
-  const diff = new Date(campaign.deadline).getTime() - Date.now();
-  const timeLeft = diff <= 0 ? "Expired" : `${Math.floor(diff/86400000)}d ${Math.floor((diff%86400000)/3600000)}h left`;
+  const timeLeft = (() => {
+    if (!mounted) return "--";
+    const diff = new Date(campaign.deadline).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    return `${Math.floor(diff/86400000)}d ${Math.floor((diff%86400000)/3600000)}h left`;
+  })();
   const sc = StatusColors[campaign.status] ?? StatusColors.OPEN;
   const risk = buildAiRiskReport(campaign);
   const sellerRep = getSellerReputation(campaign.sellerName);

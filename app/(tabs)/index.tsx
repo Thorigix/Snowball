@@ -21,7 +21,7 @@ import { useCampaigns } from "@/hooks/use-mock-store";
 import { resetDemoState } from "@/services/mock-data";
 import DemoControls from "@/components/DemoControls";
 
-const { width } = Dimensions.get("window");
+const DEFAULT_WIDTH = 400;
 const snowballLogo = require("../../assets/brand/snowball-logo.png");
 const snowballBanner = require("../../assets/brand/snowball-banner.png");
 
@@ -59,7 +59,16 @@ export default function CampaignFeedScreen() {
   const getProgress = (c: Campaign) =>
     c.targetParticipants > 0 ? c.currentParticipants / c.targetParticipants : 0;
 
+  const [mounted, setMounted] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(DEFAULT_WIDTH);
+
+  useEffect(() => {
+    setMounted(true);
+    setScreenWidth(Dimensions.get("window").width);
+  }, []);
+
   const getTimeLeft = (deadline: string) => {
+    if (!mounted) return "--";
     const diff = new Date(deadline).getTime() - Date.now();
     if (diff <= 0) return "Expired";
     const d = Math.floor(diff / 86400000);
@@ -75,7 +84,7 @@ export default function CampaignFeedScreen() {
   const liveProofText = primaryCampaign
     ? `${primaryCampaign.currentParticipants}/${primaryCampaign.targetParticipants} buyers funded · ${primaryCampaign.totalDeposited} ${primaryCampaign.tokenSymbol} locked`
     : "Live escrow proof loading";
-  const heroCompact = width < 380;
+  const heroCompact = screenWidth < 380;
 
   const CARD_ICONS: Record<string, string> = {
     "campaign-rtx-5080-demo": "hardware-chip-outline",

@@ -5,5 +5,11 @@
   "installCommand": "npm install --legacy-peer-deps && npm --prefix backend install",
   "framework": null,
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/campaign/:id", "destination": "/campaign/[id].html" },
+    { "source": "/join/:id", "destination": "/join/[id].html" },
+    { "source": "/funding/:id", "destination": "/funding/[id].html" },
+    { "source": "/delivery/:id", "destination": "/delivery/[id].html" }
+  ]
 }
