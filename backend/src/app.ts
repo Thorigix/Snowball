@@ -1,4 +1,4 @@
-import "dotenv/config";
+try { require("dotenv/config"); } catch { /* Vercel injects env vars natively */ }
 import express from "express";
 import cors from "cors";
 
