@@ -208,6 +208,7 @@ Create local `.env` files as needed. Do not commit secrets.
 # Backend
 ANCHOR_PROVIDER_URL=https://api.devnet.solana.com
 ANCHOR_WALLET=/Users/you/.config/solana/id.json
+ANCHOR_WALLET_JSON=
 LIFI_API_KEY=
 LIFI_INTEGRATOR=snowball
 ELEVENLABS_API_KEY=
