@@ -49,7 +49,7 @@ export default function JoinCampaignScreen() {
 
     setJoining(true);
     try {
-      if (campaign.id !== "campaign-rtx-5080-demo" && !campaign.campaignPda) {
+      if (campaign.id === "campaign-rtx-5080-demo" || !campaign.campaignPda) {
         setStatusText("Recording low-cost demo deposit...");
         const result = await mockJoinCampaign(campaign.id);
         if (!result.success) {
