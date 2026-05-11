@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snowball Dev3pack Submission Pack</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0c1118;
+        color: #edf3f6;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 48px 24px 72px;
+      }
+      section {
+        border-top: 1px solid #24313d;
+        padding: 28px 0;
+      }
+      h1 {
+        font-size: 42px;
+        line-height: 1.05;
+        margin: 0 0 12px;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 0 0 12px;
+      }
+      p,
+      li {
+        color: #bac7d1;
+      }
+      code {
+        background: #141d27;
+        border: 1px solid #24313d;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      .tagline {
+        color: #66e3c4;
+        font-weight: 700;
+        margin-bottom: 24px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .card {
+        background: #111923;
+        border: 1px solid #24313d;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .label {
+        color: #f3c969;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="tagline">Group buys protected by Solana escrow and explained by AI.</p>
+      <h1>Snowball</h1>
+      <p>
+        Snowball lets student groups run bulk purchases with real Solana devnet escrow, AI risk explanations,
+        and an honest proof page that separates live, fallback, demo-only, and roadmap features.
+      </p>
+
+      <section>
+        <h2>Problem</h2>
+        <p>
+          Student clubs and small groups coordinate expensive shared purchases in chats, spreadsheets, and bank
+          transfers. One organizer or seller often holds everyone funds, which creates trust, refund, and delivery risk.
+        </p>
+      </section>
+
+      <section>
+        <h2>Solution</h2>
+        <p>
+          Buyers join a campaign, deposit into a Solana devnet escrow, and seller release happens only after the
+          delivery confirmation threshold is met. AI explains each state in plain language for non-crypto users.
+        </p>
+      </section>
+
+      <section>
+        <h2>Judge Demo Path</h2>
+        <ol>
+          <li>Open <code>http://localhost:8082</code> and restart the demo.</li>
+          <li>Connect Phantom or Solflare on Solana Devnet.</li>
+          <li>Fund the wallet with local demo devnet SOL.</li>
+          <li>Join the RTX 5080 campaign and sign the real devnet deposit.</li>
+          <li>Open the receipt and verify the transaction on Explorer.</li>
+          <li>Show AI Risk Report, Seller Dashboard, dispute/refund demo state, and Proof tab.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Dev3pack Prize Fit</h2>
+        <div class="grid">
+          <div class="card"><p class="label">Solana Consumer</p><p>Real devnet escrow for a relatable group-buying workflow.</p></div>
+          <div class="card"><p class="label">AI Product Layer</p><p>AI explains release risk, funding state, and buyer protection.</p></div>
+          <div class="card"><p class="label">Partner Story</p><p>Solana, LI.FI, ElevenLabs, and mobile-first UX are shown in one flow.</p></div>
+          <div class="card"><p class="label">Grant Ready</p><p>Live scope and next milestones are clearly separated.</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Live vs Demo</h2>
+        <ul>
+          <li>Live devnet: escrow program, deposits, shipment, confirmations, release, Explorer links.</li>
+          <li>Fallback: LI.FI route preview and text AI when partner credentials are unavailable.</li>
+          <li>Demo-only: dispute and refund state, not on-chain instructions yet.</li>
+          <li>Roadmap: SPL USDC vaults and on-chain dispute/refund instructions.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Links</h2>
+        <ul>
+          <li>Web demo: <code>http://localhost:8082</code></li>
+          <li>Backend preflight: <code>http://localhost:3001/api/demo/preflight</code></li>
+          <li>Program ID: <code>2CvWVs51VW8mKGX8nk1PujUeFWFEPMZU1mi86vAdXcss</code></li>
+          <li>GitHub: placeholder</li>
+          <li>Video: placeholder</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

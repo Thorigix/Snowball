@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run check && npx expo export --platform web",
+  "outputDirectory": "dist",
+  "installCommand": "npm install --legacy-peer-deps && npm --prefix backend install",
+  "framework": null,
+  "cleanUrls": true,
+  "trailingSlash": false
+}
