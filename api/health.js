@@ -76,20 +76,10 @@ try {
 
   // Catch-all 404
   app.use("/api/*", (req, res) => {
-    res.status(404).json({ error: "API route not found" });
+    res.status(404).json({ error: "API route not found", url: req.url, originalUrl: req.originalUrl });
   });
 } catch (e) {
   console.error("Error creating express app", e);
 }
 
-module.exports = function (req, res) {
-  if (!app) {
-    return res.status(500).json({ error: "Express failed to initialize" });
-  }
-  try {
-    return app(req, res);
-  } catch (err) {
-    console.error("Error handling request", err);
-    return res.status(500).json({ error: "Express runtime error", details: String(err) });
-  }
-};
+module.exports = app;
