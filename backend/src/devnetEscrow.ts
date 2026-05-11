@@ -265,9 +265,13 @@ async function initializeRuntime(): Promise<Runtime> {
     );
   }
 
-  const creator = Keypair.generate();
-  const seller = Keypair.generate();
-  const buyers = [Keypair.generate(), Keypair.generate(), Keypair.generate()];
+  const creator = Keypair.fromSecretKey(Uint8Array.from([37,199,201,250,46,9,136,234,23,191,206,45,176,4,3,104,47,204,155,41,166,200,42,240,49,0,83,129,74,14,26,217,33,252,182,149,196,211,187,66,65,107,118,181,89,164,22,240,18,204,237,113,235,152,151,27,26,0,141,168,195,170,181,193]));
+  const seller = Keypair.fromSecretKey(Uint8Array.from([187,8,172,208,207,67,161,30,232,138,41,176,26,56,128,223,212,11,190,247,198,214,37,240,1,92,162,35,84,224,36,2,8,174,151,92,80,128,164,69,23,136,10,16,38,220,158,211,83,218,248,8,181,157,216,15,104,226,101,42,204,230,155,81]));
+  const buyers = [
+    Keypair.fromSecretKey(Uint8Array.from([220,137,9,159,176,34,46,103,75,195,172,130,65,172,127,185,122,4,187,88,70,64,24,153,200,252,234,124,78,217,150,227,7,23,191,55,109,241,181,121,93,147,116,60,101,75,72,78,82,166,96,244,40,225,56,64,165,206,115,254,240,167,228,86])),
+    Keypair.fromSecretKey(Uint8Array.from([105,218,246,76,61,44,193,37,77,39,112,113,47,226,237,173,50,255,63,135,233,118,201,34,86,248,238,66,224,29,52,48,149,250,209,118,183,123,217,93,39,49,151,142,33,101,204,212,226,156,237,3,6,215,4,7,41,116,252,17,110,122,167,87])),
+    Keypair.fromSecretKey(Uint8Array.from([230,31,26,0,140,107,89,58,154,246,14,152,186,81,149,29,63,33,40,215,45,155,56,176,101,230,191,32,171,168,222,140,88,25,14,232,227,49,254,155,97,11,186,168,28,204,11,217,193,240,144,53,164,39,51,55,87,84,213,148,140,5,84,56]))
+  ];
   const campaignPda = findCampaignPda(creator);
   const baseRuntime: Runtime = {
     connection,
@@ -282,25 +286,32 @@ async function initializeRuntime(): Promise<Runtime> {
     txHistory: [],
   };
 
-  await fund(baseRuntime, creator.publicKey, FUND_CREATOR, "fund_creator");
-  await fund(baseRuntime, seller.publicKey, FUND_SELLER, "fund_seller");
-  for (const buyer of buyers.slice(0, 2)) {
-    await fund(baseRuntime, buyer.publicKey, FUND_BUYER, "fund_buyer");
-  }
+  try {
+    const existing = await readCampaign(baseRuntime);
+    baseRuntime.initializedBuyers = existing.currentBuyers;
+    baseRuntime.confirmedBuyers = existing.confirmations;
+    addTx(baseRuntime, "create_campaign", "reused_pda", "Resumed devnet escrow campaign from chain");
+  } catch (e) {
+    await fund(baseRuntime, creator.publicKey, FUND_CREATOR, "fund_creator");
+    await fund(baseRuntime, seller.publicKey, FUND_SELLER, "fund_seller");
+    for (const buyer of buyers.slice(0, 2)) {
+      await fund(baseRuntime, buyer.publicKey, FUND_BUYER, "fund_buyer");
+    }
 
-  const sigCreate = await send(
-    baseRuntime,
-    new Transaction().add(createCampaignIx(baseRuntime)),
-    [creator]
-  );
-  addTx(baseRuntime, "create_campaign", sigCreate, "Created devnet escrow campaign");
+    const sigCreate = await send(
+      baseRuntime,
+      new Transaction().add(createCampaignIx(baseRuntime)),
+      [creator]
+    );
+    addTx(baseRuntime, "create_campaign", sigCreate, "Created devnet escrow campaign");
 
-  for (let i = 0; i < 2; i += 1) {
-    const sigJoin = await send(baseRuntime, new Transaction().add(joinIx(baseRuntime, i)), [
-      buyers[i],
-    ]);
-    baseRuntime.initializedBuyers += 1;
-    addTx(baseRuntime, "join", sigJoin, `Buyer ${i + 1} deposited 0.05 devnet SOL`);
+    for (let i = 0; i < 2; i += 1) {
+      const sigJoin = await send(baseRuntime, new Transaction().add(joinIx(baseRuntime, i)), [
+        buyers[i],
+      ]);
+      baseRuntime.initializedBuyers += 1;
+      addTx(baseRuntime, "join", sigJoin, `Buyer ${i + 1} deposited 0.05 devnet SOL`);
+    }
   }
 
   return baseRuntime;
