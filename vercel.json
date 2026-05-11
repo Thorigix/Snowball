@@ -7,10 +7,21 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/api/:match*", "destination": "/api/index" },
-    { "source": "/campaign/:id", "destination": "/campaign/[id].html" },
-    { "source": "/join/:id", "destination": "/join/[id].html" },
-    { "source": "/funding/:id", "destination": "/funding/[id].html" },
-    { "source": "/delivery/:id", "destination": "/delivery/[id].html" }
+    {
+      "source": "/campaign/:id",
+      "destination": "/campaign/[id].html"
+    },
+    {
+      "source": "/join/:id",
+      "destination": "/join/[id].html"
+    },
+    {
+      "source": "/funding/:id",
+      "destination": "/funding/[id].html"
+    },
+    {
+      "source": "/delivery/:id",
+      "destination": "/delivery/[id].html"
+    }
   ]
 }
