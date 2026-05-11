@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+import * as express from "express";
+import * as cors from "cors";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // ─── Inline route handlers (avoids cross-project TS import issues) ──────
